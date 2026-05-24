@@ -284,12 +284,24 @@ export default function App() {
 
     // Get active session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      if (u && !u.email_confirmed_at) {
+        supabase.auth.signOut();
+        setUser(null);
+      } else {
+        setUser(u);
+      }
       setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_err, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      if (u && !u.email_confirmed_at) {
+        supabase.auth.signOut();
+        setUser(null);
+      } else {
+        setUser(u);
+      }
       setAuthLoading(false);
     });
 
@@ -570,19 +582,38 @@ export default function App() {
           options: {
             data: {
               full_name: authEmail.split('@')[0]
-            }
+            },
+            emailRedirectTo: window.location.origin // Redirect to current Cloud Run deployment instead of localhost
           }
         });
         if (error) throw error;
-        setAuthSuccessMsg(language === 'ar' ? 'تم إنشاء الحساب بنجاح! تفقد بريدك الإلكتروني للتأكيد أو سجل الدخول مباشرةً.' : 'Account created successfully! Check your email to confirm or sign in.');
+        
+        if (data?.user && !data.user.email_confirmed_at) {
+          // Force sign out immediately so they cannot bypass verification
+          await supabase.auth.signOut();
+          setAuthSuccessMsg(language === 'ar' 
+            ? 'تم تقديم طلب التسجيل بنجاح! تم إرسال رابط تأكيد إلى بريدك الإلكتروني. يرجى تفعيل الحساب أولاً لتتمكن من الدخول.' 
+            : 'Registration request submitted successfully! A confirmation link has been sent to your email. Please verify your email first to be able to sign in.');
+        } else if (data?.user) {
+          setUser(data.user);
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: authEmail,
           password: authPassword,
         });
         if (error) throw error;
+        
         if (data?.user) {
-          setUser(data.user);
+          if (!data.user.email_confirmed_at) {
+            // Force sign out if email is not confirmed
+            await supabase.auth.signOut();
+            setAuthError(language === 'ar'
+              ? 'لم يتم تأكيد بريدك الإلكتروني بعد! يرجى التحقق من الرسائل في بريدك الإلكتروني لتنشيط الحساب.'
+              : 'Your email address is not confirmed yet! Please check your email inbox to confirm your address and activate your account.');
+          } else {
+            setUser(data.user);
+          }
         }
       }
     } catch (err: any) {
