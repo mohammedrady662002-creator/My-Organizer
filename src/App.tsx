@@ -1533,25 +1533,29 @@ export default function App() {
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
             {/* Language Toggle Switch */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
               className="bg-white/5 backdrop-blur-md hover:bg-white/10 p-3 rounded-2xl border border-white/10 transition-all cursor-pointer flex items-center gap-1.5 text-white text-xs font-bold"
               title={language === 'ar' ? 'Switch to English' : 'التحويل للغة العربية'}
               id="lang-toggle-btn"
             >
-              <Globe size={18} className="text-emerald-300" />
+              <Globe size={18} className="text-emerald-300 animate-spin-slow" />
               <span>{language === 'ar' ? 'English' : 'العربية'}</span>
-            </button>
+            </motion.button>
 
             {/* Dark Mode Switcher Button */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.08, rotate: [0, -15, 15, 0] }}
+              whileTap={{ scale: 0.92 }}
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="bg-white/5 backdrop-blur-md hover:bg-white/10 p-3 rounded-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center text-white"
               title={isDarkMode ? (language === 'ar' ? 'التبديل إلى الوضع المضيء' : 'Switch to Light Mode') : (language === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')}
               id="theme-toggle-btn"
             >
               {isDarkMode ? <Sun size={18} className="text-amber-300" /> : <Moon size={18} className="text-blue-200" />}
-            </button>
+            </motion.button>
 
             {/* Live clock */}
             <HeaderLiveClock language={language} label={t.clockTitle} />
@@ -1771,7 +1775,9 @@ export default function App() {
                     <span>الحالة:</span>
                   </span>
                   
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setStatusFilter('all')}
                     className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
                       statusFilter === 'all' 
@@ -1780,8 +1786,10 @@ export default function App() {
                     }`}
                   >
                     الكل
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setStatusFilter('pending')}
                     className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
                       statusFilter === 'pending' 
@@ -1790,8 +1798,10 @@ export default function App() {
                     }`}
                   >
                     المعلقة
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setStatusFilter('completed')}
                     className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
                       statusFilter === 'completed' 
@@ -1800,7 +1810,7 @@ export default function App() {
                     }`}
                   >
                     المكتملة
-                  </button>
+                  </motion.button>
                 </div>
 
                 {/* Right: Category filters options */}

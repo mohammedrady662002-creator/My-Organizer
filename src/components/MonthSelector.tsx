@@ -3,6 +3,7 @@ import { MONTHS } from '../constants';
 import { Task } from '../types';
 import { Calendar } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
+import { motion } from 'motion/react';
 
 interface MonthSelectorProps {
   selectedMonth: number | 'all';
@@ -34,7 +35,12 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
   }, [totalTasksCount, completedTasksCount]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm transition-all">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-[16px] flex items-center gap-2">
           <Calendar size={18} className="text-emerald-500" />
@@ -42,17 +48,19 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
         </h3>
         
         {/* Quick Clear Filter Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onMonthChange('all')}
           className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
             selectedMonth === 'all'
-              ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-100'
+              ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-400/20'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
           id="btn-filter-all-months"
         >
           {t.allMonths} ({totalTasksCount})
-        </button>
+        </motion.button>
       </div>
 
       {/* Grid of Months */}
@@ -63,13 +71,15 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
           const localizedMonthName = language === 'ar' ? m.name : t.months_names[m.value - 1];
           
           return (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
               key={m.value}
               onClick={() => onMonthChange(m.value)}
               className={`flex flex-col text-right p-3 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
                 isSelected
-                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-md shadow-emerald-100'
-                  : 'bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:hover:border-slate-700'
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-md shadow-emerald-400/10'
+                  : 'bg-slate-50/50 dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-800 hover:border-emerald-550/10 dark:hover:border-emerald-550/20'
               }`}
               id={`month-btn-${m.value}`}
             >
@@ -94,9 +104,11 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
                   </div>
                   {/* Progress Line */}
                   <div className={`w-full h-1 rounded-full overflow-hidden ${isSelected ? 'bg-white/25' : 'bg-slate-200 dark:bg-slate-800'}`}>
-                    <div 
-                      className={`h-full rounded-full transition-all duration-500 ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}
-                      style={{ width: `${stats.percentage}%` }}
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats.percentage}%` }}
+                      transition={{ duration: 0.5, ease: 'easeOut' }}
+                      className={`h-full rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}
                     />
                   </div>
                 </div>
@@ -108,9 +120,9 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
 
               {/* Decorative accent for selected */}
               {isSelected && (
-                <span className="absolute -bottom-1 -left-1 w-8 h-8 bg-white opacity-5 rounded-full filter blur-sm group-hover:scale-125 transition-transform" />
+                <span className="absolute -bottom-1 -left-1 w-8 h-8 bg-white opacity-10 rounded-full filter blur-sm group-hover:scale-125 transition-transform" />
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -120,6 +132,6 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
         <span>{language === 'ar' ? 'إجمالي إنجاز العام الحالي:' : 'Total Annual Progress:'}</span>
         <span className="font-bold text-slate-800 dark:text-slate-200 font-sans">{totalPercentage}% {language === 'ar' ? 'مكتمل' : 'Completed'}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }

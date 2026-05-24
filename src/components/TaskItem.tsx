@@ -159,7 +159,12 @@ export default function TaskItem({
     <motion.div
       layout
       variants={itemVariants}
-      whileHover={{ y: -2 }}
+      whileHover={{ 
+        y: -4, 
+        scale: 1.005,
+        boxShadow: '0 12px 24px -10px rgba(16, 185, 129, 0.12), 0 4px 6px -4px rgba(0, 0, 0, 0.04)' 
+      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -167,7 +172,7 @@ export default function TaskItem({
       onDragLeave={onDragLeave}
       onDragEnd={onDragEnd}
       onDrop={onDrop}
-      className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+      className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
         isDragging
           ? 'opacity-40 border-dashed border-emerald-400 dark:border-emerald-600 bg-slate-100/50 dark:bg-slate-950/20 shadow-none cursor-grabbing'
           : isDragOver
@@ -175,8 +180,8 @@ export default function TaskItem({
             : task.completed 
               ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
               : isOverdue
-                ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50'
-                : 'border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900'
+                ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-250 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50 hover:border-rose-400'
+                : 'border-slate-120 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/40'
       }`}
       id={`task-item-${task.id}`}
     >
@@ -201,19 +206,29 @@ export default function TaskItem({
         </div>
 
         {/* Custom Circular Checkbox Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.12, borderColor: '#10b981' }}
+          whileTap={{ scale: 0.88 }}
           onClick={() => onToggle(task.id)}
           className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer mt-1 ${
             task.completed
-              ? 'bg-emerald-500 border-emerald-500 text-white rotate-0'
+              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20'
               : isOverdue
                 ? 'border-rose-300 dark:border-rose-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20'
                 : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50/30'
           }`}
           id={`toggle-btn-${task.id}`}
         >
-          {task.completed && <Check size={14} strokeWidth={3} className="text-white" />}
-        </button>
+          {task.completed && (
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+            >
+              <Check size={14} strokeWidth={3} className="text-white" />
+            </motion.div>
+          )}
+        </motion.button>
 
         {/* Text info and details */}
         <div className="flex-1 min-w-0">
@@ -277,22 +292,26 @@ export default function TaskItem({
 
       {/* Actions (Edit / Delete) */}
       <div className="flex items-center justify-end gap-1.5 w-full md:w-auto mt-4 md:mt-0 pt-3 md:pt-0 border-t border-slate-100 dark:border-slate-800/60 md:border-0">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.12, r: 5 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => onEdit(task)}
-          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
           id={`edit-btn-${task.id}`}
           title={language === 'ar' ? 'تعديل المهمة' : 'Edit Task'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.12, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => onDelete(task.id)}
-          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
           id={`delete-btn-${task.id}`}
           title={language === 'ar' ? 'حذف المهمة' : 'Delete Task'}
         >
           <Trash2 size={16} />
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

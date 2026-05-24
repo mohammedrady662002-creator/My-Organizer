@@ -129,30 +129,41 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
   const currentMonthMaxDays = MONTHS.find(m => m.value === month)?.days || 31;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm transition-all animate-fade-in">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.98, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 22 }}
+      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
+    >
       <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-[16px] flex items-center gap-2">
           {editingTask ? (
             <>
-              <Save size={18} className="text-violet-500" />
+              <motion.div animate={{ rotate: [0, -10, 10, 0] }} transition={{ repeat: Infinity, duration: 4, repeatDelay: 1 }}>
+                <Save size={18} className="text-violet-500" />
+              </motion.div>
               <span>{t.editTask}</span>
             </>
           ) : (
             <>
-              <Plus size={20} className="text-emerald-500" />
+              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
+                <Plus size={20} className="text-emerald-500" />
+              </motion.div>
               <span>{t.addNewTask}</span>
             </>
           )}
         </h3>
 
         {editingTask && (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.15, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
             onClick={onCancelEdit}
             className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             id="cancel-edit-btn"
           >
             <X size={16} />
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -274,7 +285,9 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
               }
 
               return (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   key={p}
                   type="button"
                   onClick={() => setPriority(p)}
@@ -282,7 +295,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
                   id={`priority-toggle-${p}`}
                 >
                   {label}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -315,7 +328,9 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
               const localizedCatName = (t.cats_names as any)[cat.id] || cat.name;
 
               return (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   key={cat.id}
                   type="button"
                   onClick={() => setCategory(cat.id)}
@@ -328,7 +343,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
                 >
                   <CategoryIcon name={cat.icon} className={isSelected ? 'text-white' : 'text-slate-400 dark:text-slate-500'} />
                   <span className="truncate max-w-full">{localizedCatName}</span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -336,7 +351,9 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
 
         {/* Form buttons */}
         <div className="pt-2 flex gap-2">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03, boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.25)' }}
+            whileTap={{ scale: 0.97 }}
             type="submit"
             className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
             id="task-form-submit-btn"
@@ -352,29 +369,33 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
                 <span>{t.addNewTask}</span>
               </>
             )}
-          </button>
+          </motion.button>
           
           {editingTask ? (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               type="button"
               onClick={onCancelEdit}
               className="px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl transition-colors cursor-pointer"
               id="task-form-cancel-btn"
             >
               {t.cancel}
-            </button>
+            </motion.button>
           ) : (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               type="button"
               onClick={resetForm}
               className="px-4 bg-slate-50 dark:bg-slate-800/45 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
               id="task-form-reset-btn"
             >
               {language === 'ar' ? 'مسح بالكامل' : 'Clear Form'}
-            </button>
+            </motion.button>
           )}
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }
