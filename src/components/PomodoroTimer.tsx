@@ -184,27 +184,27 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       
       {/* Visual Timer Display Panel */}
-      <div className="lg:col-span-8 bg-[#1E293B]/60 backdrop-blur-md rounded-3xl border border-white/5 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="lg:col-span-8 bg-white dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-8 flex flex-col items-center justify-center relative overflow-hidden rounded-3xl shadow-sm dark:shadow-none">
         
         {/* Soft atmospheric gradient behind timer */}
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl transition-colors duration-500 -z-10 ${
-          sessionType === 'work' ? 'bg-indigo-500/15' : 'bg-emerald-500/10'
+          sessionType === 'work' ? 'bg-indigo-500/10' : 'bg-emerald-500/10'
         }`} />
 
         {/* Focus Header Option list */}
-        <div className="flex bg-[#0F172A] p-1.5 rounded-2xl border border-white/5 gap-1 mb-8 self-center">
+        <div className="flex bg-slate-50 dark:bg-[#0F172A] p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 gap-1 mb-8 self-center">
           {[
             { id: 'work', labelAr: 'التركيز العملي', labelEn: 'Deep Work', colorClass: 'text-[#6366F1]' },
-            { id: 'short', labelAr: 'استراحة قصيرة', labelEn: 'Short Break', colorClass: 'text-emerald-400' },
-            { id: 'long', labelAr: 'استراحة طويلة', labelEn: 'Long Break', colorClass: 'text-cyan-400' }
+            { id: 'short', labelAr: 'استراحة قصيرة', labelEn: 'Short Break', colorClass: 'text-emerald-500' },
+            { id: 'long', labelAr: 'استراحة طويلة', labelEn: 'Long Break', colorClass: 'text-cyan-550' }
           ].map(opt => (
             <button
               key={opt.id}
               onClick={() => handleSwitchPreset(opt.id as any)}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 sessionType === opt.id 
-                  ? 'bg-[#1E293B] text-white border border-white/5 shadow-md'
-                  : 'text-[#94A3B8] hover:text-white hover:bg-white/5'
+                  ? 'bg-white dark:bg-[#1E293B] text-[#6366F1] dark:text-white border border-slate-200 dark:border-white/5 shadow-sm'
+                  : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
               }`}
             >
               {language === 'ar' ? opt.labelAr : opt.labelEn}
@@ -220,7 +220,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
               cx="120"
               cy="120"
               r={radius}
-              className="stroke-[#0F172A] fill-transparent stroke-[8]"
+              className="stroke-slate-100 dark:stroke-[#0F172A] fill-transparent stroke-[8]"
             />
             {/* Active glowing color ring */}
             <motion.circle
@@ -239,10 +239,10 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
 
           {/* Time digits & Status in centering */}
           <div className="absolute text-center flex flex-col items-center select-none">
-            <span className="text-3xl font-mono font-black text-white tracking-widest">
+            <span className="text-3xl font-mono font-black text-slate-800 dark:text-white tracking-widest">
               {formatTime(secondsLeft)}
             </span>
-            <span className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-widest mt-1">
+            <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] font-bold uppercase tracking-widest mt-1">
               {sessionType === 'work' 
                 ? (language === 'ar' ? 'وقت التركيز' : 'STAY FOCUS')
                 : (language === 'ar' ? 'وقت الراحة' : 'REST TIME')}
@@ -251,7 +251,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             {/* Sound Mute Trigger */}
             <button 
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="mt-4 p-1.5 rounded-lg text-[#475569] hover:text-white transition-colors cursor-pointer"
+              className="mt-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-850 dark:hover:text-white transition-colors cursor-pointer"
             >
               {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
             </button>
@@ -262,7 +262,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
         <div className="flex items-center gap-4 mt-8">
           <button
             onClick={handleReset}
-            className="p-3.5 rounded-2xl bg-[#0F172A] hover:bg-[#1E293B] border border-white/5 text-[#94A3B8] hover:text-white transition-all cursor-pointer"
+            className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#0F172A] dark:hover:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-450 dark:text-[#94A3B8] dark:hover:text-white hover:text-slate-800 transition-all cursor-pointer"
             title={language === 'ar' ? 'إعادة تعيين المؤقت' : 'Reset focus counter'}
           >
             <RotateCcw size={18} />
@@ -272,7 +272,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             onClick={handleStartPause}
             className={`px-8 py-4 rounded-2xl font-bold text-xs flex items-center gap-2 transform active:scale-95 transition-all shadow-lg cursor-pointer ${
               isRunning
-                ? 'bg-[#1E293B] text-white border border-white/10 hover:bg-white/5'
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-[#1E293B] dark:text-white border border-slate-200 dark:border-white/10 dark:hover:bg-white/5 shadow-sm'
                 : sessionType === 'work'
                   ? 'bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white shadow-indigo-500/20'
                   : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/20'
@@ -295,32 +295,32 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       </div>
 
       {/* Habits Focus statistics & Sessions history log */}
-      <div className="lg:col-span-4 bg-[#1E293B] rounded-3xl border border-white/5 p-6 flex flex-col justify-between">
+      <div className="lg:col-span-4 bg-white dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
         
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Timer size={16} className="text-[#6366F1]" />
               <span>{language === 'ar' ? 'سجل جلسات التركيز' : 'Focus Session Log'}</span>
             </h3>
             {focusLogs.length > 0 && (
               <button 
                 onClick={clearFocusLogs}
-                className="text-[10px] text-red-400 hover:underline cursor-pointer"
+                className="text-[10px] text-red-500 hover:underline cursor-pointer"
               >
                 {language === 'ar' ? 'مسح السجل' : 'Clear logs'}
               </button>
             )}
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#0F172A] border border-white/5 grid grid-cols-2 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 grid grid-cols-2 gap-4">
             <div>
-              <span className="block text-[10px] font-medium text-[#94A3B8]">{language === 'ar' ? 'دقائق العمل الإجمالية' : 'Deep focus mins'}</span>
-              <span className="text-lg font-mono font-black text-white">{totalFocusMinutes} {language === 'ar' ? 'دقيقة' : 'm'}</span>
+              <span className="block text-[10px] font-medium text-slate-500 dark:text-[#94A3B8]">{language === 'ar' ? 'دقائق العمل الإجمالية' : 'Deep focus mins'}</span>
+              <span className="text-lg font-mono font-black text-slate-800 dark:text-white">{totalFocusMinutes} {language === 'ar' ? 'دقيقة' : 'm'}</span>
             </div>
             <div>
-              <span className="block text-[10px] font-medium text-[#94A3B8]">{language === 'ar' ? 'جلسات العمل' : 'Sessions Done'}</span>
-              <span className="text-lg font-mono font-black text-emerald-400">
+              <span className="block text-[10px] font-medium text-slate-500 dark:text-[#94A3B8]">{language === 'ar' ? 'جلسات العمل' : 'Sessions Done'}</span>
+              <span className="text-lg font-mono font-black text-emerald-500 dark:text-emerald-400">
                 {focusLogs.filter(l => l.type === 'work').length}
               </span>
             </div>
@@ -329,25 +329,25 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
           {/* Sessions entries feed */}
           <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
             {focusLogs.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#475569] flex flex-col items-center justify-center gap-2">
-                <CheckCircle2 size={24} className="text-[#1E293B]" />
+              <div className="py-8 text-center text-xs text-slate-400 dark:text-[#475569] flex flex-col items-center justify-center gap-2">
+                <CheckCircle2 size={24} className="text-slate-200 dark:text-[#1E293B]" />
                 <p>{language === 'ar' ? 'لم تكتمل أي جلسة بعد' : 'Log completed sessions here'}</p>
               </div>
             ) : (
               focusLogs.map((log) => (
-                <div key={log.id} className="p-3 bg-[#0F172A]/40 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                <div key={log.id} className="p-3 bg-slate-50 dark:bg-[#0F172A]/40 border border-slate-200 dark:border-white/5 rounded-xl flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      log.type === 'work' ? 'bg-[#6366F1]' : 'bg-emerald-400'
+                      log.type === 'work' ? 'bg-[#6366F1]' : 'bg-emerald-500 dark:bg-emerald-400'
                     }`} />
-                    <span className="font-semibold text-white">
+                    <span className="font-semibold text-slate-800 dark:text-white">
                       {log.type === 'work' 
                         ? (language === 'ar' ? 'جلسة تركيز عميق' : 'Focus Session')
                         : (language === 'ar' ? 'استراحة مستحقة' : 'Break Session')}
                     </span>
-                    <span className="text-[#475569] font-mono">({log.duration}m)</span>
+                    <span className="text-slate-400 dark:text-[#475569] font-mono">({log.duration}m)</span>
                   </div>
-                  <span className="text-[10px] text-[#94A3B8] font-mono">{log.timestamp}</span>
+                  <span className="text-[10px] text-slate-400 dark:text-[#94A3B8] font-mono">{log.timestamp}</span>
                 </div>
               ))
             )}
@@ -355,8 +355,8 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
         </div>
 
         {/* Ambient tips container */}
-        <div className="mt-6 pt-6 border-t border-white/5">
-          <div className="p-3.5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex gap-3 text-[11px] leading-relaxed text-[#94A3B8]">
+        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-white/5">
+          <div className="p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 flex gap-3 text-[11px] leading-relaxed text-slate-500 dark:text-[#94A3B8]">
             <Coffee className="text-[#6366F1] shrink-0" size={16} />
             <p className="font-sans">
               {language === 'ar'

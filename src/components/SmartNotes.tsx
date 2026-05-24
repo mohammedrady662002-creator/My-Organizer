@@ -183,16 +183,16 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-[calc(100vh-140px)]">
       
       {/* Search and notes catalog sidebar container */}
-      <div className="md:col-span-4 bg-[#1E293B]/40 rounded-3xl border border-white/5 p-4 flex flex-col gap-4 overflow-hidden h-full">
+      <div className="md:col-span-4 bg-white dark:bg-[#1E293B]/40 border border-slate-200/60 dark:border-white/5 p-4 flex flex-col gap-4 overflow-hidden h-full rounded-3xl shadow-sm dark:shadow-none">
         
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <h2 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <BookOpen size={16} className="text-[#6366F1]" />
             <span>{language === 'ar' ? 'كتالوج الملاحظات الذكية' : 'Smart Notebook'}</span>
           </h2>
           <button
             onClick={handleCreateNote}
-            className="p-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-[#6366F1] border border-indigo-500/15 cursor-pointer transition-colors"
+            className="p-1.5 rounded-xl bg-indigo-505/10 bg-indigo-500/10 hover:bg-indigo-500/20 text-[#6366F1] border border-indigo-500/15 cursor-pointer transition-colors"
             title={language === 'ar' ? 'ملاحظة جديدة' : 'Create new note'}
           >
             <Plus size={16} />
@@ -200,22 +200,22 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
         </div>
 
         {/* Search Input bar */}
-        <div className="bg-[#0F172A] border border-white/5 rounded-xl px-3 py-2.5 flex items-center gap-2">
-          <Search size={14} className="text-[#475569]" />
+        <div className="bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2.5 flex items-center gap-2">
+          <Search size={14} className="text-slate-400 dark:text-[#475569]" />
           <input
             type="text"
             placeholder={language === 'ar' ? 'ابحث في محتوى المفكرات...' : 'Search notebooks & thoughts...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border-none text-xs text-white focus:outline-none focus:ring-0 font-sans"
+            className="w-full bg-transparent border-none text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-0 font-sans"
           />
         </div>
 
         {/* List of notes */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
           {filteredNotes.length === 0 ? (
-            <div className="text-center py-12 text-[#94A3B8] text-xs">
-              <StickyNote className="mx-auto mb-2 text-[#334155]" size={32} />
+            <div className="text-center py-12 text-slate-500 dark:text-[#94A3B8] text-xs">
+              <StickyNote className="mx-auto mb-2 text-slate-300 dark:text-[#334155]" size={32} />
               <p>{language === 'ar' ? 'لا توجد ملاحظات مطابقة' : 'No matches found'}</p>
             </div>
           ) : (
@@ -227,31 +227,31 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                   onClick={() => selectNote(note)}
                   className={`w-full text-right md:text-right p-3.5 rounded-2xl border transition-all flex flex-col text-xs cursor-pointer relative group ${
                     isActive 
-                      ? 'bg-indigo-500/10 border-[#6366F1]/30 text-white' 
-                      : 'bg-[#1E293B]/40 hover:bg-white/5 border-transparent text-[#94A3B8]'
+                      ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-[#6366F1]/30 text-slate-800 dark:text-white' 
+                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-[#1E293B]/40 dark:hover:bg-white/5 border-slate-200/50 dark:border-transparent text-slate-500 dark:text-[#94A3B8]'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                      note.category === 'work' ? 'bg-emerald-500/10 text-emerald-400' :
-                      note.category === 'study' ? 'bg-blue-500/10 text-blue-400' :
-                      'bg-purple-500/10 text-purple-400'
+                      note.category === 'work' ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' :
+                      note.category === 'study' ? 'bg-blue-500/10 text-blue-550 dark:text-blue-400' :
+                      'bg-purple-500/10 text-purple-500 dark:text-purple-400'
                     }`}>
                       {note.category === 'work' ? (language === 'ar' ? 'عمل' : 'Work') :
                        note.category === 'study' ? (language === 'ar' ? 'دراسة' : 'Study') :
                        (language === 'ar' ? 'شخصي' : 'Personal')}
                     </span>
-                    <span className="text-[10px] text-[#475569] font-mono leading-none">{note.updatedAt}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-[#475569] font-mono leading-none">{note.updatedAt}</span>
                   </div>
 
-                  <h3 className="font-bold text-white text-xs mt-2.5 truncate w-full">{note.title}</h3>
-                  <p className="text-[11px] text-[#64748B] mt-1.5 truncate w-full leading-normal font-sans">
+                  <h3 className="font-bold text-slate-800 dark:text-white text-xs mt-2.5 truncate w-full">{note.title}</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-[#64748B] mt-1.5 truncate w-full leading-normal font-sans">
                     {note.content || (language === 'ar' ? 'خاوية... صِف أفكارك هنا.' : 'Empty node... Write your thoughts.')}
                   </p>
 
                   <button
                     onClick={(e) => handleDeleteNote(note.id, e)}
-                    className="absolute right-3 bottom-3 p-1.5 rounded-lg hover:bg-red-500/10 text-[#475569] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    className="absolute right-3 bottom-3 p-1.5 rounded-lg hover:bg-red-500/10 text-slate-400 dark:text-[#475569] hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     title={language === 'ar' ? 'حذف' : 'Remove idea'}
                   >
                     <Trash2 size={12} />
@@ -265,14 +265,14 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
       </div>
 
       {/* Editor & AI Workspace */}
-      <div className="md:col-span-8 bg-[#111827]/30 rounded-3xl border border-white/5 p-6 flex flex-col gap-6 overflow-hidden h-full">
+      <div className="md:col-span-8 bg-white dark:bg-[#111827]/30 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col gap-6 overflow-hidden h-full rounded-3xl shadow-sm dark:shadow-none">
         {selectedNoteId ? (
           <div className="flex-1 flex flex-col gap-6 overflow-hidden">
             
             {/* Header / Category / Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4 shrink-0">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="flex bg-[#0F172A] p-1 rounded-xl border border-white/5 gap-0.5">
+                <div className="flex bg-slate-50 dark:bg-[#0F172A] p-1 rounded-xl border border-slate-200 dark:border-white/5 gap-0.5 animate-none">
                   {[
                     { id: 'personal', labelAr: 'شخصي', labelEn: 'Personal' },
                     { id: 'work', labelAr: 'عمل', labelEn: 'Work' },
@@ -286,8 +286,8 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                       }}
                       className={`px-3 py-1.5 text-[10px] rounded-lg font-bold transition-all cursor-pointer ${
                         editCategory === cat.id
-                          ? 'bg-[#1E293B] text-white border border-white/5 shadow'
-                          : 'text-[#94A3B8] hover:text-white'
+                          ? 'bg-white dark:bg-[#1E293B] text-[#6366F1] dark:text-white border border-slate-200 dark:border-white/5 shadow-sm'
+                          : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 dark:hover:text-white'
                       }`}
                     >
                       {language === 'ar' ? cat.labelAr : cat.labelEn}
@@ -301,19 +301,19 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                 <button
                   onClick={handleAiSummarize}
                   disabled={isAiLoading || !editContent.trim()}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 hover:border-[#6366F1] text-[#c7d2fe] hover:text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-indigo-50 dark:bg-gradient-to-r dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-150 dark:border-indigo-500/30 hover:border-[#6366F1] text-indigo-750 dark:text-[#c7d2fe] hover:text-indigo-900 dark:hover:text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isAiLoading ? (
                     <Loader2 size={13} className="animate-spin text-[#6366F1]" />
                   ) : (
-                    <Sparkles size={13} className="text-purple-400" />
+                    <Sparkles size={13} className="text-purple-500 dark:text-purple-400" />
                   )}
                   <span>{language === 'ar' ? 'تلخيص ذكي (AI)' : 'Summarize via AI'}</span>
                 </button>
 
                 <button
                   onClick={handleSaveActiveNote}
-                  className="px-4 py-2 bg-[#1E293B] hover:bg-[#334155] border border-white/5 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-4 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 text-slate-700 dark:text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Save size={13} />
                   <span>{language === 'ar' ? 'حفظ الملاحظة' : 'Save note'}</span>
@@ -331,7 +331,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                   setTimeout(handleSaveActiveNote, 10);
                 }}
                 placeholder={language === 'ar' ? 'مثال: خطة الـ ٣ سنوات الأخيرة' : 'e.g., 3-Year Master Strategy'}
-                className="w-full bg-transparent border-none text-base md:text-lg font-black text-white focus:outline-none focus:ring-0 leading-tight placeholder-white/20"
+                className="w-full bg-transparent border-none text-base md:text-lg font-black text-slate-800 dark:text-white focus:outline-none focus:ring-0 leading-tight placeholder-slate-400/50 dark:placeholder-white/20"
               />
 
               <textarea
@@ -341,7 +341,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                   setTimeout(handleSaveActiveNote, 10);
                 }}
                 placeholder={language === 'ar' ? 'ابدأ تدوين مذكراتك وأفكارك بنمط حر هنا...' : 'Start recording your thoughts freely here...'}
-                className="w-full flex-1 bg-transparent border-none text-xs text-[#CBD5E1] focus:outline-none focus:ring-0 leading-relaxed resize-none h-60 md:h-[220px] font-sans placeholder-white/10"
+                className="w-full flex-1 bg-transparent border-none text-xs text-slate-650 dark:text-[#CBD5E1] focus:outline-none focus:ring-0 leading-relaxed resize-none h-60 md:h-[220px] font-sans placeholder-slate-400/40 dark:placeholder-white/10"
               />
 
               {/* AI Summary outcome panel */}
@@ -351,29 +351,29 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 15 }}
-                    className="p-5 rounded-2xl bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-purple-500/20 relative mt-4 block"
+                    className="p-5 rounded-2xl bg-slate-50 dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#0F172A] border border-indigo-100 dark:border-purple-500/20 relative mt-4 block"
                   >
                     <div className="absolute right-4 top-4 text-purple-400 opacity-60">
                       <Sparkles size={16} />
                     </div>
 
-                    <h4 className="text-xs font-bold text-white mb-2 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-1.5">
                       <span>{language === 'ar' ? 'ملخص الذكاء الاصطناعي الذكي' : 'Summarized Insights (AI)'}</span>
                     </h4>
 
                     {isAiLoading && (
-                      <div className="flex items-center gap-2 py-4 text-xs text-[#94A3B8]">
+                      <div className="flex items-center gap-2 py-4 text-xs text-slate-500 dark:text-[#94A3B8]">
                         <Loader2 size={14} className="animate-spin text-[#6366F1]" />
                         <span>{language === 'ar' ? 'جارٍ قراءة واستخلاص المفكرة بشكل ذكي...' : 'Extracting structure from note...'}</span>
                       </div>
                     )}
 
                     {aiError && (
-                      <p className="text-xs text-red-400 font-sans">{aiError}</p>
+                      <p className="text-xs text-red-500 font-sans">{aiError}</p>
                     )}
 
                     {aiSummary && (
-                      <p className="text-xs leading-relaxed text-[#c7d2fe] whitespace-pre-line font-sans">
+                      <p className="text-xs leading-relaxed text-slate-700 dark:text-[#c7d2fe] whitespace-pre-line font-sans">
                         {aiSummary}
                       </p>
                     )}
@@ -385,11 +385,11 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
 
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-[#94A3B8] text-center gap-3">
-            <FileText className="text-[#1E293B]" size={48} />
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-[#94A3B8] text-center gap-3">
+            <FileText className="text-slate-100 dark:text-[#1E293B]" size={48} />
             <div>
-              <h3 className="font-bold text-white text-sm">{language === 'ar' ? 'لا توجد ملاحظة محددة' : 'No note open'}</h3>
-              <p className="text-xs mt-1">{language === 'ar' ? 'اختر ملاحظة من القائمة أو اضغط على الإضافة لكتابة فكرة جديدة.' : 'Select a folder path or click the add button to structure a new thought.'}</p>
+              <h3 className="font-bold text-slate-800 dark:text-white text-sm">{language === 'ar' ? 'لا توجد ملاحظة محددة' : 'No note open'}</h3>
+              <p className="text-xs mt-1 text-slate-400 dark:text-[#94A3B8]">{language === 'ar' ? 'اختر ملاحظة من القائمة أو اضغط على الإضافة لكتابة فكرة جديدة.' : 'Select a folder path or click the add button to structure a new thought.'}</p>
             </div>
             <button
               onClick={handleCreateNote}

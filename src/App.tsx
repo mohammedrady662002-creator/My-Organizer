@@ -176,12 +176,12 @@ function HeaderLiveClock({ language, label }: { language: 'ar' | 'en'; label: st
   }, []);
 
   return (
-    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]" id="live-header-clock">
-      <div className="flex items-center gap-1.5 text-emerald-300 text-[11px] font-bold">
+    <div className="bg-slate-100/50 dark:bg-white/5 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]" id="live-header-clock">
+      <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300 text-[11px] font-bold">
         <Clock size={12} />
         <span>{label}</span>
       </div>
-      <span className="text-sm font-black font-mono mt-0.5 text-white leading-none">
+      <span className="text-sm font-black font-mono mt-0.5 text-slate-800 dark:text-white leading-none">
         {time.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </span>
     </div>

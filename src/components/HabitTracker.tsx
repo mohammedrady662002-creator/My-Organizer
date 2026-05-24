@@ -213,39 +213,39 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Welcome and stats panel */}
-        <div className="md:col-span-8 bg-[#1E293B]/60 backdrop-blur-md rounded-3xl border border-white/5 p-6 flex flex-col justify-between">
+        <div className="md:col-span-8 bg-white dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
           <div>
             <div className="flex items-center gap-2 text-[#6366F1] font-bold text-xs uppercase tracking-wider mb-2">
               <Flame size={14} className="text-[#6366F1]" />
               <span>{language === 'ar' ? 'العادات وبناء الروتين' : 'HAIBTS & ROUTINES'}</span>
             </div>
-            <h1 className="text-xl md:text-2xl font-black text-white leading-tight">
+            <h1 className="text-xl md:text-2xl font-black text-slate-800 dark:text-white leading-tight">
               {language === 'ar' ? 'متابع العادات وبناء الروتين الممتاز' : 'Premium Habit & Micro-Routine Builder'}
             </h1>
-            <p className="text-xs text-[#94A3B8] mt-2 font-sans md:max-w-xl leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-2 font-sans md:max-w-xl leading-relaxed">
               {language === 'ar' 
                 ? 'تكرار الأفعال الصغيرة يبني شخصيتك الحقيقية. تابع عاداتك بانتظام لتكسب خطوط التزام أطول (Streaks) مع الحفاظ على وتيرتك اليومية.'
                 : 'Consistency compounds daily. Log, view daily streaks, and stay disciplined with your health, focus, shopping, and workout goals.'}
             </p>
           </div>
 
-          <div className="flex gap-6 mt-6 pt-6 border-t border-white/5">
+          <div className="flex gap-6 mt-6 pt-6 border-t border-slate-100 dark:border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-500/20 text-[#6366F1] font-black text-lg">
                 {totalHabits}
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white">{language === 'ar' ? 'العادات الكلية' : 'Total Habits'}</h4>
-                <p className="text-[10px] text-[#94A3B8]">{language === 'ar' ? 'المفعلة حالياً' : 'Active tracks'}</p>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white">{language === 'ar' ? 'العادات الكلية' : 'Total Habits'}</h4>
+                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8]">{language === 'ar' ? 'المفعلة حالياً' : 'Active tracks'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-500/25 text-emerald-400 font-black text-lg">
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-500/25 text-emerald-500 dark:text-emerald-400 font-black text-lg">
                 {complRate}%
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white">{language === 'ar' ? 'معدل إنجاز اليوم' : 'Completed Today'}</h4>
-                <p className="text-[10px] text-[#94A3B8]">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white">{language === 'ar' ? 'معدل إنجاز اليوم' : 'Completed Today'}</h4>
+                <p className="text-[10px] text-slate-400 dark:text-[#94A3B8]">
                   {language === 'ar' ? `${completedToday} من ${totalHabits} عادات` : `${completedToday} of ${totalHabits} accomplished`}
                 </p>
               </div>
@@ -254,25 +254,25 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
         </div>
 
         {/* Add Habit Bento Card */}
-        <div className="md:col-span-4 bg-[#1E293B] rounded-3xl border border-white/5 p-6 flex flex-col justify-between">
-          <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+        <div className="md:col-span-4 bg-white dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
             <Plus size={16} className="text-[#6366F1]" />
             <span>{language === 'ar' ? 'عاطفة مخصصة جديدة' : 'Add Custom Habit'}</span>
           </h3>
           <form onSubmit={handleAddHabit} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-1.5">{language === 'ar' ? 'اسم العادة والرمز' : 'Habit Name & Emoji'}</label>
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase mb-1.5">{language === 'ar' ? 'اسم العادة والرمز' : 'Habit Name & Emoji'}</label>
               <input
                 type="text"
                 placeholder={language === 'ar' ? 'مثال: التأمل 🧘‍♂️' : 'e.g., Meditation 🧘‍♂️'}
                 value={newHabitName}
                 onChange={(e) => setNewHabitName(e.target.value)}
-                className="w-full bg-[#0F172A] border border-white/5 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#6366F1] font-sans"
+                className="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-[#6366F1] font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-[#94A3B8] uppercase mb-1.5">{language === 'ar' ? 'التصنيف' : 'Category'}</label>
+              <label className="block text-[10px] font-bold text-slate-400 dark:text-[#94A3B8] uppercase mb-1.5">{language === 'ar' ? 'التصنيف' : 'Category'}</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: 'health', labelAr: 'الصحة', labelEn: 'Health' },
@@ -287,7 +287,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
                     className={`px-3 py-2 text-[11px] rounded-xl font-bold border transition-colors cursor-pointer ${
                       newHabitCategory === cat.id
                         ? 'bg-indigo-500/10 border-[#6366F1] text-[#6366F1]'
-                        : 'bg-[#0F172A] border-white/5 text-[#94A3B8] hover:bg-white/5'
+                        : 'bg-slate-50 border-slate-200 dark:bg-[#0F172A] dark:border-white/5 text-slate-500 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-white/5'
                     }`}
                   >
                     {language === 'ar' ? cat.labelAr : cat.labelEn}
@@ -308,41 +308,41 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       </div>
 
       {/* Habits List Panel */}
-      <div className="bg-[#1E293B]/30 rounded-3xl border border-white/5 overflow-hidden">
-        <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#1E293B]/40">
+      <div className="bg-white dark:bg-[#1E293B]/30 rounded-3xl border border-slate-200/60 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-none">
+        <div className="p-6 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-[#1E293B]/40">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Check className="text-emerald-400 shrink-0" size={18} />
+            <h2 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Check className="text-emerald-500 shrink-0" size={18} />
               <span>{language === 'ar' ? 'العادات الأسبوعية الفعالة' : 'Core Weekly Tracks'}</span>
             </h2>
-            <p className="text-[11px] text-[#94A3B8] font-sans mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] font-sans mt-1">
               {language === 'ar' ? 'اضغط على الدائرة للموازنة وتحديث الحالة لكل يوم من الأيام الـ 7 الأخيرة.' : 'Click to log your micro-achievements across the last 7 calendar days.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-center">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] text-emerald-400 font-bold">{language === 'ar' ? 'تحديث متزامن في الوقت الفعلي' : 'Real-time client active'}</span>
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">{language === 'ar' ? 'تحديث متزامن في الوقت الفعلي' : 'Real-time client active'}</span>
           </div>
         </div>
 
         {habits.length === 0 ? (
-          <div className="p-12 text-center text-[#94A3B8] flex flex-col items-center justify-center gap-3">
-            <Grid className="text-[#334155]" size={40} />
+          <div className="p-12 text-center text-slate-400 dark:text-[#94A3B8] flex flex-col items-center justify-center gap-3">
+            <Grid className="text-slate-300 dark:text-[#334155]" size={40} />
             <p className="text-xs">{language === 'ar' ? 'لا توجد عادات مسجلة بعد. أنشئ عاداتك بالبطاقة الجانبية!' : 'No habits tracked. Create your first customized habits with the sidebar card.'}</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-slate-100 dark:divide-white/5">
             {habits.map((habit) => (
-              <div key={habit.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-white/5 transition-colors">
+              <div key={habit.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                 
                 {/* Habit details and streak */}
                 <div className="flex items-start gap-4 lg:w-1/3">
                   <div className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                    habit.category === 'health' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                    habit.category === 'study' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
-                    habit.category === 'work' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                    'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                    habit.category === 'health' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
+                    habit.category === 'study' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' :
+                    habit.category === 'work' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                    'bg-purple-500/10 border-purple-500/20 text-purple-500'
                   }`}>
                     {habit.category === 'health' ? <Heart size={16} /> :
                      habit.category === 'study' ? <BookOpen size={16} /> :
@@ -351,14 +351,14 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-white truncate leading-snug">{habit.name}</h3>
+                    <h3 className="font-bold text-sm text-slate-800 dark:text-white truncate leading-snug">{habit.name}</h3>
                     <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[10px] text-[#94A3B8] font-sans font-bold capitalize">
+                      <span className="text-[10px] text-slate-500 dark:text-[#94A3B8] font-sans font-bold capitalize">
                         {language === 'ar' 
                           ? (habit.category === 'health' ? 'صحة ولياقة' : habit.category === 'study' ? 'دراسة وفكر' : habit.category === 'work' ? 'عمل وإنتاج' : 'تطوير شخصي')
                           : habit.category}
                       </span>
-                      <span className="text-[#334155]">•</span>
+                      <span className="text-slate-300 dark:text-[#334155]">•</span>
                       <div className="flex items-center gap-0.5 text-amber-500">
                         <Flame size={12} className="fill-amber-500/20" />
                         <span className="text-xs font-mono font-black">{habit.streak} {language === 'ar' ? 'أيام التزام' : 'streak'}</span>
@@ -377,16 +377,16 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
                         onClick={() => handleToggleHabitDay(habit.id, day.dateStr)}
                         className="flex flex-col items-center gap-1.5 flex-1 p-2 rounded-xl transition-all relative group cursor-pointer"
                       >
-                        <span className={`text-[10px] font-bold ${day.isToday ? 'text-[#6366F1]' : 'text-[#94A3B8]'} transition-colors group-hover:text-white`}>
+                        <span className={`text-[10px] font-bold ${day.isToday ? 'text-[#6366F1]' : 'text-slate-500 dark:text-[#94A3B8]'} transition-colors group-hover:text-slate-800 dark:group-hover:text-white`}>
                           {day.dayName}
                         </span>
                         
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
                           isCompleted 
-                            ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 border-transparent text-slate-900 shadow-md shadow-emerald-500/20 scale-105'
+                            ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 border-transparent text-white dark:text-slate-900 shadow-md shadow-emerald-500/20 scale-105'
                             : day.isToday 
-                              ? 'bg-indigo-500/5 hover:bg-indigo-500/10 border-indigo-500/30 text-[#94A3B8]' 
-                              : 'bg-[#0F172A] hover:bg-[#1E293B] border-white/5 text-[#94A3B8]'
+                              ? 'bg-indigo-505/5 hover:bg-indigo-550/10 border-indigo-500/30 text-indigo-600 dark:text-[#94A3B8]' 
+                              : 'bg-slate-50 hover:bg-slate-100 dark:bg-[#0F172A] dark:hover:bg-[#1E293B] border-slate-200 dark:border-white/5 text-slate-500 dark:text-[#94A3B8]'
                         }`}>
                           {isCompleted ? (
                             <Check className="stroke-[3px]" size={15} />
@@ -407,7 +407,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
                 <div className="shrink-0 flex items-center justify-end lg:w-16">
                   <button
                     onClick={() => handleDeleteHabit(habit.id)}
-                    className="p-2 rounded-xl hover:bg-red-500/10 text-[#475569] hover:text-red-400 border border-transparent hover:border-red-500/5 transition-all cursor-pointer group"
+                    className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 dark:text-[#475569] hover:text-red-500 dark:hover:text-red-400 border border-transparent hover:border-red-500/5 transition-all cursor-pointer group"
                     title={language === 'ar' ? 'حذف العادة' : 'Remove Habit Track'}
                   >
                     <Trash2 size={14} className="transition-transform group-hover:scale-110" />
@@ -421,18 +421,18 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       </div>
 
       {/* Motivational Advice Widget */}
-      <div className="p-6 rounded-3xl bg-gradient-to-br from-[#1E293B] to-[#111827] border border-white/5 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+      <div className="p-6 rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#111827] border border-slate-200/60 dark:border-white/5 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 shadow-sm dark:shadow-none">
         <div className="absolute right-0 top-0 w-32 h-32 bg-[#6366F1]/5 rounded-full blur-2xl" />
         <div className="absolute left-12 bottom-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl" />
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 flex items-center justify-center shrink-0 border border-indigo-500/10">
-          <Award className="text-[#6366F1] animate-bounce" size={22} />
+        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20">
+          <Award className="text-[#6366F1]" size={22} />
         </div>
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+          <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
             <span>{language === 'ar' ? 'أفضل الرواد يركزون على النظم وليس الأهداف' : 'Atomic Habit Compounds'}</span>
             <Sparkles size={14} className="text-amber-400" />
           </h4>
-          <p className="text-xs text-[#94A3B8] leading-relaxed font-sans">
+          <p className="text-xs text-slate-500 dark:text-[#94A3B8] leading-relaxed font-sans">
             {language === 'ar'
               ? 'الأهداف تضع الاتجاه، الروابط والنظم هي محرك التقدم الحقيقي. التزامك بـ 4 عادات صغيرة يومياً بنسبة 90% يعطيك نجاحاً مضاعفاً بنهاية العام.'
               : 'Goals direct, but routines compile progress. Managing standard physical benchmarks alongside digital tasks ensures clean daily momentum.'}

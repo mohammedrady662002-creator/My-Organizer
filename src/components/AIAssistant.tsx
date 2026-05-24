@@ -212,13 +212,13 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)]">
       
       {/* Sidebar Quick-Action Controls */}
-      <div className="lg:col-span-4 bg-[#1E293B]/40 rounded-3xl border border-white/5 p-6 flex flex-col gap-6 overflow-y-auto">
+      <div className="lg:col-span-4 bg-white dark:bg-[#1E293B]/40 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col gap-6 overflow-y-auto rounded-3xl shadow-sm dark:shadow-none">
         <div>
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <h2 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <Sparkles size={16} className="text-[#6366F1]" />
             <span>{language === 'ar' ? 'الأدوات ومحركات الذكاء الاصطناعي' : 'AI Engine Presets'}</span>
           </h2>
-          <p className="text-[11px] text-[#94A3B8] font-sans mt-1.5 leading-relaxed">
+          <p className="text-[11px] text-slate-500 dark:text-[#94A3B8] font-sans mt-1.5 leading-relaxed">
             {language === 'ar' 
               ? 'محركات الذكاء الاصطناعي المباشرة تقرأ قائمة مهامك الحالية وتعيد هندسة وقتك في ثوانٍ دون الحاجة لكتابة يدويّة.'
               : 'Direct integration queries your actual task array on the server and crafts instant advice.'}
@@ -229,15 +229,15 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           <button
             onClick={handleAutoPlanDay}
             disabled={isLoading || tasks.length === 0}
-            className="w-full text-right p-4 rounded-2xl bg-[#1E293B] hover:bg-[#334155] border border-white/5 flex flex-col gap-1 transition-all cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full text-right p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200/60 dark:border-white/5 flex flex-col gap-1 transition-all cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <div className="flex items-center justify-between w-full">
-              <span className="font-bold text-xs text-white group-hover:text-[#6366F1] transition-colors">
+              <span className="font-bold text-xs text-slate-800 dark:text-white group-hover:text-[#6366F1] transition-colors">
                 {language === 'ar' ? '⏱️ تخطيط وتوزيع اليوم تفصيلياً' : '⏱️ Auto-Plan Daily Schedule'}
               </span>
               <Sparkles size={12} className="text-[#6366F1]" />
             </div>
-            <p className="text-[10px] text-[#94A3B8] font-sans mt-1 leading-normal">
+            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] font-sans mt-1 leading-normal">
               {language === 'ar' ? 'يقرأ مهامك ويقترح خطة صباحية ومسائية دقيقة.' : 'Analyze tasks and build a structured morning/evening chronological list.'}
             </p>
           </button>
@@ -245,49 +245,49 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           <button
             onClick={handleAnalyzeProductivity}
             disabled={isLoading || tasks.length === 0}
-            className="w-full text-right p-4 rounded-2xl bg-[#1E293B] hover:bg-[#334155] border border-white/5 flex flex-col gap-1 transition-all cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full text-right p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200/60 dark:border-white/5 flex flex-col gap-1 transition-all cursor-pointer group disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <div className="flex items-center justify-between w-full">
-              <span className="font-bold text-xs text-white group-hover:text-purple-400 transition-colors">
+              <span className="font-bold text-xs text-slate-800 dark:text-white group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors">
                 {language === 'ar' ? '📊 تحليل الإنتاجية وتخفيف التراكم' : '📊 Analyze Productivity Flow'}
               </span>
-              <Flame size={12} className="text-purple-400" />
+              <Flame size={12} className="text-purple-500 dark:text-purple-400" />
             </div>
-            <p className="text-[10px] text-[#94A3B8] font-sans mt-1 leading-normal">
+            <p className="text-[10px] text-slate-500 dark:text-[#94A3B8] font-sans mt-1 leading-normal">
               {language === 'ar' ? 'مراجعة المماطلة والأولويات وتقديم نصائح تحسين مباشرة.' : 'Scrutinize incomplete steps and propose anti-procrastination strategies.'}
             </p>
           </button>
         </div>
 
         {/* Task list quick visual preview */}
-        <div className="mt-auto bg-[#0F172A] p-4 rounded-2xl border border-white/5 space-y-3">
-          <span className="text-[10px] font-bold text-[#475569] uppercase tracking-wider block">
+        <div className="mt-auto bg-slate-50 dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#475569] uppercase tracking-wider block">
             {language === 'ar' ? 'محتوى التحليل النشط' : 'SYSTEM ANALYTICS CONTEXT'}
           </span>
-          <div className="flex justify-between text-xs text-[#CBD5E1]">
+          <div className="flex justify-between text-xs text-slate-600 dark:text-[#CBD5E1]">
             <span>{language === 'ar' ? 'المهام الإجمالية المقروءة:' : 'Total tracked tasks:'}</span>
-            <span className="font-mono font-bold text-white">{tasks.length}</span>
+            <span className="font-mono font-bold text-slate-850 dark:text-white">{tasks.length}</span>
           </div>
-          <div className="flex justify-between text-xs text-[#CBD5E1]">
+          <div className="flex justify-between text-xs text-slate-650 dark:text-[#CBD5E1]">
             <span>{language === 'ar' ? 'قيد الانتظار:' : 'Pending queues:'}</span>
-            <span className="font-mono font-bold text-yellow-400">{tasks.filter(t => !t.completed).length}</span>
+            <span className="font-mono font-bold text-yellow-600 dark:text-yellow-400">{tasks.filter(t => !t.completed).length}</span>
           </div>
         </div>
 
       </div>
 
       {/* Main Conversational Chat Hub */}
-      <div className="lg:col-span-8 bg-[#111827]/30 rounded-3xl border border-white/5 p-6 flex flex-col justify-between overflow-hidden h-full">
+      <div className="lg:col-span-8 bg-white dark:bg-[#111827]/30 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between overflow-hidden h-full rounded-3xl shadow-sm dark:shadow-none">
         
         {/* Chat Header */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[#6366F1] flex items-center justify-center shrink-0">
               <Bot size={16} />
             </div>
             <div>
-              <h3 className="font-black text-sm text-white">{language === 'ar' ? 'المستشار الذكي سيرين AI' : 'Serene Assistant Hub'}</h3>
-              <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+              <h3 className="font-black text-sm text-slate-800 dark:text-white">{language === 'ar' ? 'المستشار الذكي سيرين AI' : 'Serene Assistant Hub'}</h3>
+              <p className="text-[10px] text-emerald-500 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 <span>{language === 'ar' ? 'نشط ويقرأ بياناتك بأمان' : 'Interactive Gemini 3.5 Engine Active'}</span>
               </p>
@@ -317,8 +317,8 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
                 {/* avatar */}
                 <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center border text-xs ${
                   isAI 
-                    ? 'bg-indigo-500/10 border-indigo-500/20 text-[#6366F1]' 
-                    : 'bg-[#1E293B] border-white/5 text-white'
+                    ? 'bg-indigo-55/70 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-[#6366F1]' 
+                    : 'bg-slate-100 dark:bg-[#1E293B] border-slate-200 dark:border-white/5 text-slate-700 dark:text-white'
                 }`}>
                   {isAI ? <Bot size={14} /> : <User size={14} />}
                 </div>
@@ -326,7 +326,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
                 {/* message body */}
                 <div className={`p-4 rounded-2xl text-xs space-y-1 overflow-x-auto ${
                   isAI 
-                    ? 'bg-[#1E293B]/60 text-[#E2E8F0] border border-white/5' 
+                    ? 'bg-slate-50 dark:bg-[#1E293B]/60 text-slate-700 dark:text-[#E2E8F0] border border-slate-200 dark:border-white/5' 
                     : 'bg-indigo-500 text-white font-sans'
                 }`}>
                   {isAI ? (
@@ -343,10 +343,10 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
 
           {isLoading && (
             <div className="flex gap-3 max-w-[80%] mr-auto self-start">
-              <div className="w-8 h-8 rounded-full bg-indigo-500/10 border-indigo-500/20 text-[#6366F1] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-indigo-505/10 bg-indigo-500/10 border-indigo-500/20 text-[#6366F1] flex items-center justify-center shrink-0">
                 <Loader2 size={14} className="animate-spin text-[#6366F1]" />
               </div>
-              <div className="p-4 rounded-2xl bg-[#1E293B]/60 border border-white/5 text-[#94A3B8] text-xs flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1E293B]/60 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-[#94A3B8] text-xs flex items-center gap-2">
                 <Loader2 size={12} className="animate-spin text-[#6366F1]" />
                 <span>{language === 'ar' ? 'سيرين تراجع بياناتك وصياغة الحل الأمثل...' : 'Serene compiling response...'}</span>
               </div>
@@ -354,7 +354,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           )}
 
           {errorText && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/10 text-xs text-red-400 font-sans mx-4 mt-2">
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/10 text-xs text-red-500 font-sans mx-4 mt-2">
               {errorText}
             </div>
           )}
@@ -363,14 +363,14 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         </div>
 
         {/* Input box */}
-        <form onSubmit={handleSendMessage} className="bg-[#0F172A] border border-white/5 rounded-2xl p-2 flex items-center gap-2 shrink-0">
+        <form onSubmit={handleSendMessage} className="bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-2xl p-2 flex items-center gap-2 shrink-0">
           <input
             type="text"
             placeholder={language === 'ar' ? 'اسأل سيرين أي سؤال...' : 'Ask Serene coaching advice...'}
             value={inputMsg}
             onChange={(e) => setInputMsg(e.target.value)}
             disabled={isLoading}
-            className="w-full bg-transparent border-none text-xs text-white px-3 focus:outline-none focus:ring-0 font-sans"
+            className="w-full bg-transparent border-none text-xs text-slate-800 dark:text-white px-3 focus:outline-none focus:ring-0 font-sans placeholder-slate-400 dark:placeholder-white/20"
           />
           <button
             type="submit"
