@@ -44,6 +44,7 @@ import { MONTHS, CATEGORIES } from './constants';
 import TaskItem from './components/TaskItem';
 import TaskForm from './components/TaskForm';
 import MonthSelector from './components/MonthSelector';
+import DaySelector from './components/DaySelector';
 import StatsCard from './components/StatsCard';
 import TrendChart from './components/TrendChart';
 import { exportTasksToICS } from './utils/icsExport';
@@ -218,6 +219,14 @@ export function isRealSupabaseUser(user: any): boolean {
   // Match standard UUID structure (8-4-4-4-12 hex characters)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id);
+}
+
+export function sanitizeApiError(errMessage: string | undefined, defaultMsg: string): string {
+  if (typeof errMessage !== 'string') return defaultMsg;
+  if (errMessage.includes('<!doctype') || errMessage.includes('Unexpected token') || errMessage.includes('SyntaxError')) {
+    return 'Invalid API URL configuration. The URL is returning an HTML page instead of API response. Please verify VITE_SUPABASE_URL in Settings.';
+  }
+  return errMessage;
 }
 
 export default function App() {
@@ -419,8 +428,9 @@ export default function App() {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Database connection failed, possibly missing table tasks:', error.message);
-        setDbSyncError(error.message);
+        const msg = sanitizeApiError(error.message, 'Database query failed.');
+        console.error('Database connection failed:', msg);
+        setDbSyncError(msg);
         setTasksLoading(false);
         return;
       }
@@ -819,7 +829,7 @@ export default function App() {
         }
       }
     } catch (err: any) {
-      setAuthError(err.message || (language === 'ar' ? 'فشلت هذه العملية، تأكد من التفاصيل المدخلة.' : 'Operation failed. Check details.'));
+      setAuthError(sanitizeApiError(err.message, (language === 'ar' ? 'فشلت هذه العملية، تأكد من التفاصيل المدخلة.' : 'Operation failed. Check details.')));
     } finally {
       setAuthActionLoading(false);
     }
@@ -855,7 +865,7 @@ export default function App() {
         ? 'تم إرسال رابط إعادة تعيين كلمة المرور بنجاح! يرجى مراجعة صندوق الرسائل ببريدك الإلكتروني.' 
         : 'Password reset link sent successfully! Please check your email inbox.');
     } catch (err: any) {
-      setAuthError(err.message || (language === 'ar' ? 'فشل في إرسال رابط إعادة تعيين كلمة المرور.' : 'Failed to send password reset link.'));
+      setAuthError(sanitizeApiError(err.message, (language === 'ar' ? 'فشل في إرسال رابط إعادة تعيين كلمة المرور.' : 'Failed to send password reset link.')));
     } finally {
       setAuthActionLoading(false);
     }
@@ -900,7 +910,7 @@ export default function App() {
             : 'Operation failed: Phone Auth provider is not enabled in your Supabase project (Auth -> Providers -> Phone). See setup guide below to enable it!');
           setShowConfigGuide(true);
         } else {
-          setAuthError(err.message || (language === 'ar' ? 'حدث خطأ أثناء مصادقة الهاتف.' : 'An error occurred during phone authentication.'));
+          setAuthError(sanitizeApiError(err.message, (language === 'ar' ? 'حدث خطأ أثناء مصادقة الهاتف.' : 'An error occurred during phone authentication.')));
         }
       } finally {
         setAuthActionLoading(false);
@@ -1043,7 +1053,7 @@ export default function App() {
         }
       } catch (err: any) {
         console.error('OTP Verification Error:', err);
-        setAuthError(err.message || (language === 'ar' ? 'تأكد من كتابة كود التحقق بشكل صحيح.' : 'Invalid verification code. Please check and retry.'));
+        setAuthError(sanitizeApiError(err.message, (language === 'ar' ? 'تأكد من كتابة كود التحقق بشكل صحيح.' : 'Invalid verification code. Please check and retry.')));
       } finally {
         setAuthActionLoading(false);
       }
@@ -1094,7 +1104,7 @@ export default function App() {
             : `Failed: ${provider === 'google' ? 'Google' : 'Facebook'} provider is disabled in your Supabase project (Auth -> Providers). Follow our dynamic configuration guide below to enable it!`);
           setShowConfigGuide(true);
         } else {
-          setAuthError(err.message || `Failed to sign in via ${provider}`);
+          setAuthError(sanitizeApiError(err.message, `Failed to sign in via ${provider}`));
         }
       }
     } else {
@@ -1338,8 +1348,9 @@ export default function App() {
         (statusFilter === 'pending' && !task.completed);
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
       const matchesCategory = categoryFilter === 'all' || task.category === categoryFilter;
+      const titleString = task.title || '';
       const matchesSearch = 
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        titleString.toLowerCase().includes(searchQuery.toLowerCase()) || 
         (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return passesDate && matchesStatus && matchesPriority && matchesCategory && matchesSearch;
@@ -1998,7 +2009,16 @@ export default function App() {
                         ].map(mode => (
                           <button
                             key={mode.id}
-                            onClick={() => setViewMode(mode.id as any)}
+                            onClick={() => {
+                              setViewMode(mode.id as any);
+                              if (mode.id === 'daily') {
+                                setSelectedMonth(new Date().getMonth() + 1);
+                                setSelectedDay(new Date().getDate());
+                              } else if (mode.id === 'all' && selectedDay !== 'all') {
+                                // If they click month(all), clear specific day selection to show entire month again
+                                setSelectedDay('all');
+                              }
+                            }}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                               viewMode === mode.id
                                 ? 'bg-white dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/50 dark:border-white/10'
@@ -2137,7 +2157,7 @@ export default function App() {
                   <div className="lg:col-span-4 space-y-6">
                     
                     {/* Compact Metrics visual widget */}
-                    <StatsCard tasks={tasks} />
+                    <StatsCard tasks={filteredTasks} language={language} />
 
                     {/* Integrated Calendar Scheduler Widget */}
                     <MonthSelector
@@ -2149,6 +2169,20 @@ export default function App() {
                       }}
                       tasks={tasks}
                     />
+
+                    {/* Day selector for deep filtering */}
+                    {selectedMonth !== 'all' && (
+                      <DaySelector
+                        selectedMonth={selectedMonth}
+                        selectedDay={selectedDay}
+                        onDayChange={(d) => {
+                          setSelectedDay(d);
+                          setViewMode('all'); // Stay in 'all' view block to respect matchesDay
+                        }}
+                        tasks={tasks}
+                        language={language}
+                      />
+                    )}
 
                     {/* Accomplishment Tendence Trend widgets */}
                     <TrendChart tasks={tasks} />
