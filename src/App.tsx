@@ -490,7 +490,11 @@ export default function App() {
         const cYear = curDate.getFullYear();
 
         const habits = [
-          { key: 'w', title: language === 'ar' ? 'الصلوات الخمس' : '5 Daily Prayers', category: 'worship', priority: 'high' as const },
+          { key: 'fajr', title: language === 'ar' ? 'صلاة الفجر' : 'Fajr Prayer', category: 'worship', priority: 'high' as const },
+          { key: 'dhuhr', title: language === 'ar' ? 'صلاة الظهر' : 'Dhuhr Prayer', category: 'worship', priority: 'high' as const },
+          { key: 'asr', title: language === 'ar' ? 'صلاة العصر' : 'Asr Prayer', category: 'worship', priority: 'high' as const },
+          { key: 'maghrib', title: language === 'ar' ? 'صلاة المغرب' : 'Maghrib Prayer', category: 'worship', priority: 'high' as const },
+          { key: 'isha', title: language === 'ar' ? 'صلاة العشاء' : 'Isha Prayer', category: 'worship', priority: 'high' as const },
           { key: 'q', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Daily Quran', category: 'worship', priority: 'medium' as const },
           { key: 'a', title: language === 'ar' ? 'أذكار الصباح والمساء' : 'Morning & Evening Azkar', category: 'worship', priority: 'medium' as const }
         ];
