@@ -115,7 +115,7 @@ export default function TrendChart({ tasks, language = 'ar' }: TrendChartProps) 
 
       {hasAnyData ? (
         <div className="w-full h-64 overflow-hidden" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <LineChart
               data={chartData}
               margin={{ top: 10, right: 10, left: -25, bottom: 0 }}

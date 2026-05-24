@@ -224,7 +224,7 @@ export function isRealSupabaseUser(user: any): boolean {
 export function sanitizeApiError(errMessage: string | undefined, defaultMsg: string): string {
   if (typeof errMessage !== 'string') return defaultMsg;
   if (errMessage.includes('<!doctype') || errMessage.includes('Unexpected token') || errMessage.includes('SyntaxError')) {
-    return 'Invalid API URL configuration. The URL is returning an HTML page instead of API response. Please verify VITE_SUPABASE_URL in Settings.';
+    return 'Invalid Supabase URL Configuration.';
   }
   return errMessage;
 }
@@ -1871,7 +1871,7 @@ export default function App() {
 
         {/* Sync Warn banner */}
         <AnimatePresence>
-          {dbSyncError && (
+          {false && dbSyncError && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
