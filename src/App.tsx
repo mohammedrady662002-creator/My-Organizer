@@ -309,6 +309,7 @@ export default function App() {
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   
   // Filtering states
+  const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'all'>('daily'); // New view toggle
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>(new Date().getMonth() + 1); // default to current month
   const [selectedDay, setSelectedDay] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
@@ -678,9 +679,70 @@ export default function App() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, [user]);
+
+  // Daily Routine Injector
+  useEffect(() => {
+    if (!user || tasksLoading || tasks.length === 0) return;
+    
+    const todayStr = new Date().toLocaleDateString('en-US'); // e.g., "5/24/2026"
+    const injectedKey = `routines_injected_${user.id}_${todayStr}`;
+    if (localStorage.getItem(injectedKey)) return;
+
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const DAILY_ROUTINES_AR = [
+      'صلاة الفجر', 'صلاة الظهر', 'صلاة العصر', 'صلاة المغرب', 'صلاة العشاء',
+      'أذكار الصباح', 'أذكار المساء', 'ورد القرآن', 'الجيم'
+    ];
+    const DAILY_ROUTINES_EN = [
+      'Fajr Prayer', 'Dhuhr Prayer', 'Asr Prayer', 'Maghrib Prayer', 'Isha Prayer',
+      'Morning Adhkar', 'Evening Adhkar', 'Quran Reading', 'Gym'
+    ];
+
+    const routines = language === 'ar' ? DAILY_ROUTINES_AR : DAILY_ROUTINES_EN;
+    
+    const existingTitles = new Set(
+      tasks
+        .filter(t => t.day === day && t.month === month && t.year === year)
+        .map(t => t.title)
+    );
+
+    const missingRoutines = routines.filter(r => !existingTitles.has(r));
+
+    if (missingRoutines.length > 0) {
+      const newTasks: Task[] = missingRoutines.map((title, idx) => ({
+        id: `routine-${todayStr.replace(/\//g, '-')}-${idx}-${Date.now()}`,
+        title,
+        description: language === 'ar' ? 'مهمة يومية متكررة' : 'Daily recurring task',
+        completed: false,
+        priority: 'high',
+        category: (title.includes('Gym') || title.includes('الجيم')) ? 'health' : 'personal',
+        day,
+        month,
+        year,
+        createdAt: new Date(Date.now() + idx).toISOString(),
+        userId: user.id || 'guest',
+        position: idx
+      }));
+
+      const updatedTasks = [...newTasks, ...tasks];
+      setTasks(updatedTasks);
+      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedTasks));
+      
+      if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
+         Promise.all(newTasks.map(t => supabase.from('tasks').insert(toDBTask(t, user.id)))).catch(err => console.error(err));
+      }
+    }
+
+    localStorage.setItem(injectedKey, 'true');
+
+  }, [tasks, user, tasksLoading, language]);
 
   // Clock live interval tick (updated every 60 seconds for performance)
   useEffect(() => {
@@ -1221,6 +1283,7 @@ export default function App() {
 
   // Handler: Task delete
   const handleDeleteTask = async (id: string) => {
+    if (!window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه المهمة؟' : 'Are you sure you want to delete this task?')) return;
     const updatedList = tasks.filter(t => t.id !== id);
     setTasks(updatedList);
     localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
@@ -1258,8 +1321,25 @@ export default function App() {
   // Filter calculations memoized for high-performance and smoothness
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const matchesMonth = selectedMonth === 'all' || task.month === selectedMonth;
-      const matchesDay = selectedDay === 'all' || task.day === selectedDay;
+      let passesDate = true;
+      const now = new Date();
+      
+      if (viewMode === 'daily') {
+        passesDate = task.year === now.getFullYear() && task.month === (now.getMonth() + 1) && task.day === now.getDate();
+      } else if (viewMode === 'weekly') {
+        const tDate = new Date(task.year, task.month - 1, task.day);
+        const todayAtMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffDays = Math.round((tDate.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
+        const currentDayOfWeek = todayAtMidnight.getDay(); // 0 is Sunday
+        const startDiff = -currentDayOfWeek;
+        const endDiff = 6 - currentDayOfWeek;
+        passesDate = diffDays >= startDiff && diffDays <= endDiff;
+      } else {
+        const matchesMonth = selectedMonth === 'all' || task.month === selectedMonth;
+        const matchesDay = selectedDay === 'all' || task.day === selectedDay;
+        passesDate = matchesMonth && matchesDay;
+      }
+
       const matchesStatus = 
         statusFilter === 'all' || 
         (statusFilter === 'completed' && task.completed) || 
@@ -1270,9 +1350,9 @@ export default function App() {
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      return matchesMonth && matchesDay && matchesStatus && matchesPriority && matchesCategory && matchesSearch;
+      return passesDate && matchesStatus && matchesPriority && matchesCategory && matchesSearch;
     });
-  }, [tasks, selectedMonth, selectedDay, statusFilter, priorityFilter, categoryFilter, searchQuery]);
+  }, [tasks, viewMode, selectedMonth, selectedDay, statusFilter, priorityFilter, categoryFilter, searchQuery]);
 
   // Grouped by day computed via memoization
   const { tasksByDay, sortedDays } = useMemo(() => {
@@ -1784,6 +1864,28 @@ export default function App() {
 
                     {/* Filters Dashboard Panel bar */}
                     <div className="bg-white dark:bg-[#1E293B]/40 rounded-3xl border border-slate-200/60 dark:border-white/5 p-4 space-y-4 shadow-sm dark:shadow-none">
+                      
+                      {/* View Mode Toggle */}
+                      <div className="flex bg-slate-100 dark:bg-[#0F172A] p-1 rounded-xl border border-slate-200/50 dark:border-white/5 w-fit">
+                        {[
+                          { id: 'daily', labelAr: 'اليوم', labelEn: 'Today' },
+                          { id: 'weekly', labelAr: 'أسبوعي', labelEn: 'Week' },
+                          { id: 'all', labelAr: 'شهري (الكل)', labelEn: 'Month (All)' },
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => setViewMode(mode.id as any)}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              viewMode === mode.id
+                                ? 'bg-white dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/50 dark:border-white/10'
+                                : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 dark:hover:text-white'
+                            }`}
+                          >
+                            {language === 'ar' ? mode.labelAr : mode.labelEn}
+                          </button>
+                        ))}
+                      </div>
+
                       {/* Search box queries */}
                       <div className="bg-slate-50 dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
                         <Search size={14} className="text-[#475569] dark:text-[#94A3B8]" />
@@ -1919,6 +2021,7 @@ export default function App() {
                       onMonthChange={(m) => {
                         setSelectedMonth(m);
                         setSelectedDay('all');
+                        setViewMode('all');
                       }}
                       tasks={tasks}
                     />
