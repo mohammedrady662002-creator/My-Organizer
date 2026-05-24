@@ -1,0 +1,6 @@
+{
+  "name": "منظم حياتي",
+  "description": "منظم المهام اليومي والشهري مع متابعة دقيقة لنسب تقدم وإنجاز الأهداف.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
