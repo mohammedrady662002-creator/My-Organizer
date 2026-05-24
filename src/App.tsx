@@ -481,64 +481,6 @@ export default function App() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
 
-        // -------------------------------------------------------------
-        // AUTOMATIC DAILY WORSHIP TASKS INJECTION
-        // -------------------------------------------------------------
-        const curDate = new Date();
-        const cDay = curDate.getDate();
-        const cMonth = curDate.getMonth() + 1;
-        const cYear = curDate.getFullYear();
-
-        const habits = [
-          { key: 'fajr', title: language === 'ar' ? 'صلاة الفجر' : 'Fajr Prayer', category: 'worship', priority: 'high' as const },
-          { key: 'dhuhr', title: language === 'ar' ? 'صلاة الظهر' : 'Dhuhr Prayer', category: 'worship', priority: 'high' as const },
-          { key: 'asr', title: language === 'ar' ? 'صلاة العصر' : 'Asr Prayer', category: 'worship', priority: 'high' as const },
-          { key: 'maghrib', title: language === 'ar' ? 'صلاة المغرب' : 'Maghrib Prayer', category: 'worship', priority: 'high' as const },
-          { key: 'isha', title: language === 'ar' ? 'صلاة العشاء' : 'Isha Prayer', category: 'worship', priority: 'high' as const },
-          { key: 'q', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Daily Quran', category: 'worship', priority: 'medium' as const },
-          { key: 'a', title: language === 'ar' ? 'أذكار الصباح والمساء' : 'Morning & Evening Azkar', category: 'worship', priority: 'medium' as const }
-        ];
-
-        const missingHabits = habits.filter(h => {
-          return !uniqueTasks.some(t => t.day === cDay && t.month === cMonth && t.year === cYear && t.title === h.title);
-        });
-
-        if (missingHabits.length > 0) {
-          const newLocalTasks: Task[] = missingHabits.map(h => ({
-            id: `local-habit-${h.key}-${cDay}-${cMonth}-${cYear}-${Math.random().toString(36).substring(2,7)}`,
-            title: h.title,
-            description: language === 'ar' ? 'عبادة يومية مضافة تلقائياً' : 'Auto-added daily worship',
-            category: h.category,
-            priority: h.priority,
-            day: cDay,
-            month: cMonth,
-            year: cYear,
-            completed: false,
-            createdAt: new Date().toISOString()
-          }));
-
-          uniqueTasks.push(...newLocalTasks);
-          
-          if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
-             try {
-               const dbTasks = newLocalTasks.map(t => toDBTask(t, user.id));
-               let { error } = await supabase.from('tasks').insert(dbTasks);
-               if (error && (error.message.includes('position') || error.message.includes('Column not found'))) {
-                 localStorage.setItem('supabase_has_position_columns', 'false');
-                 const fallbackDbTasks = newLocalTasks.map(t => {
-                   const _t = toDBTask(t, user.id) as any;
-                   delete _t.position;
-                   return _t;
-                 });
-                 await supabase.from('tasks').insert(fallbackDbTasks);
-               }
-             } catch (err) {
-               console.error('Failed db habits sync', err);
-             }
-          }
-        }
-        // -------------------------------------------------------------
-
         setTasks(uniqueTasks);
         localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(uniqueTasks));
       }
@@ -743,33 +685,33 @@ export default function App() {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
-    const DAILY_ROUTINES_AR = [
-      'صلاة الفجر', 'صلاة الظهر', 'صلاة العصر', 'صلاة المغرب', 'صلاة العشاء',
-      'أذكار الصباح', 'أذكار المساء', 'ورد القرآن', 'الجيم'
+    const habits = [
+      { key: 'fajr', title: language === 'ar' ? 'صلاة الفجر' : 'Fajr Prayer', category: 'worship', priority: 'high' as const },
+      { key: 'dhuhr', title: language === 'ar' ? 'صلاة الظهر' : 'Dhuhr Prayer', category: 'worship', priority: 'high' as const },
+      { key: 'asr', title: language === 'ar' ? 'صلاة العصر' : 'Asr Prayer', category: 'worship', priority: 'high' as const },
+      { key: 'maghrib', title: language === 'ar' ? 'صلاة المغرب' : 'Maghrib Prayer', category: 'worship', priority: 'high' as const },
+      { key: 'isha', title: language === 'ar' ? 'صلاة العشاء' : 'Isha Prayer', category: 'worship', priority: 'high' as const },
+      { key: 'q', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Daily Quran', category: 'worship', priority: 'medium' as const },
+      { key: 'a', title: language === 'ar' ? 'أذكار الصباح والمساء' : 'Morning & Evening Azkar', category: 'worship', priority: 'medium' as const }
     ];
-    const DAILY_ROUTINES_EN = [
-      'Fajr Prayer', 'Dhuhr Prayer', 'Asr Prayer', 'Maghrib Prayer', 'Isha Prayer',
-      'Morning Adhkar', 'Evening Adhkar', 'Quran Reading', 'Gym'
-    ];
-
-    const routines = language === 'ar' ? DAILY_ROUTINES_AR : DAILY_ROUTINES_EN;
     
+    // We also optionally add gym if required, but let's keep it simple with worship
     const existingTitles = new Set(
       tasks
         .filter(t => t.day === day && t.month === month && t.year === year)
         .map(t => t.title)
     );
 
-    const missingRoutines = routines.filter(r => !existingTitles.has(r));
+    const missingHabits = habits.filter(h => !existingTitles.has(h.title));
 
-    if (missingRoutines.length > 0) {
-      const newTasks: Task[] = missingRoutines.map((title, idx) => ({
+    if (missingHabits.length > 0) {
+      const newTasks: Task[] = missingHabits.map((h, idx) => ({
         id: `routine-${todayStr.replace(/\//g, '-')}-${idx}-${Date.now()}`,
-        title,
+        title: h.title,
         description: language === 'ar' ? 'مهمة يومية متكررة' : 'Daily recurring task',
         completed: false,
-        priority: 'high',
-        category: (title.includes('Gym') || title.includes('الجيم')) ? 'health' : 'personal',
+        priority: h.priority,
+        category: h.category,
         day,
         month,
         year,
