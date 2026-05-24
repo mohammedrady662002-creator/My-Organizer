@@ -1385,12 +1385,9 @@ export default function App() {
   // Workspace View
   return (
     <div 
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-16 selection:bg-emerald-100 selection:text-emerald-905 font-sans transition-colors duration-250" 
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-16 selection:bg-emerald-100 selection:text-emerald-900 font-sans transition-colors duration-200" 
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
-      
-
-
       {/* Database Schema Setup Instruction Modal or Card if trigger is clicked */}
       <AnimatePresence>
         {isSqlPanelOpen && (
@@ -1499,7 +1496,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Profile card, language toggle, dark mode switcher & Logout widget metadata with realtime timer */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
             {/* Language Toggle Switch */}
             <button
@@ -1535,22 +1531,20 @@ export default function App() {
 
             {/* Profile Detail */}
             {user && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/10 p-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-white font-extrabold flex items-center justify-center border-2 border-emerald-400 text-sm">
-                  {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/15 p-3 flex items-center gap-3 shadow-inner">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-extrabold flex items-center justify-center border-2 border-white/20 text-sm shadow">
+                  {user.email ? user.email[0].toUpperCase() : 'U'}
                 </div>
-                
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-white truncate max-w-[140px]">
-                    {user.user_metadata?.full_name || user.email?.split('@')[0] || t.guestMode}
+                <div className="flex flex-col text-left">
+                  <span className="text-white text-xs font-black truncate max-w-[90px] font-sans">
+                    {user.email ? user.email.split('@')[0] : 'User'}
                   </span>
-                  <button
+                  <button 
                     onClick={handleLogout}
-                    className="text-[10px] text-emerald-300 font-extrabold hover:text-rose-400 transition-colors flex items-center gap-1 cursor-pointer text-right min-w-0"
-                    id="header-logout-btn"
+                    className="text-[10px] text-red-300 hover:text-red-400 font-extrabold flex items-center gap-0.5 transition-all w-fit cursor-pointer"
                   >
                     <LogOut size={10} />
-                    <span>{t.logout}</span>
+                    <span>{language === 'ar' ? 'خروج' : 'Logout'}</span>
                   </button>
                 </div>
               </div>
@@ -1568,66 +1562,45 @@ export default function App() {
             exit={{ opacity: 0, height: 0 }}
             className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-6 overflow-hidden"
           >
-            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <h4 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
-                  <Github className="text-slate-700" size={18} />
-                  <span>دليل الإطلاق الشامل: التصدير لـ GitHub والرفع بـ Cloudflare Pages 🌐</span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-850 p-6 shadow-md space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h4 className="font-extrabold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                  <Github className="text-slate-700 dark:text-slate-350" size={18} />
+                  <span>{language === 'ar' ? 'دليل الإطلاق الشامل: التصدير لـ GitHub والرفع بـ Cloudflare Pages 🌐' : 'Comprehensive Launch Guide: Export to GitHub & Deploy to Cloudflare Pages 🌐'}</span>
                 </h4>
                 <button 
                   onClick={() => setIsHelpOpen(false)}
-                  className="text-xs text-slate-400 font-bold hover:text-slate-600 cursor-pointer"
+                  className="text-xs text-slate-400 font-bold hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                 >
-                  إخلاق الدليل ×
+                  {language === 'ar' ? 'إغلاق الدليل ×' : 'Close Guide ×'}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 leading-relaxed">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 {/* Section 1: GitHub */}
-                <div className="space-y-2.5 p-4 bg-slate-50 rounded-xl border border-slate-200/50">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
-                    <Github size={16} className="text-slate-900" />
-                    <span>1. الربط والتصدير إلى GitHub</span>
+                <div className="space-y-2.5 p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-850">
+                  <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 text-sm">
+                    <Github size={16} className="text-slate-900 dark:text-slate-200" />
+                    <span>{language === 'ar' ? '1. الربط والتصدير إلى GitHub' : '1. Connect and Export to GitHub'}</span>
                   </span>
                   <ol className="list-decimal list-inside space-y-2 pl-1">
-                    <li>اضغط على قائمة <strong>Settings / Export</strong> في الزاوية العلوية لمنصة AI Studio.</li>
-                    <li>اختر <strong>Export to GitHub</strong>، مما سيقوم تلقائياً برفع كامل الكود المصدري النظيف وخالٍ من بقايا فايربيز إلى مستودع (Repository) خاص بك.</li>
-                    <li>أو خذ نسخة كاملة مضغوطة عبر <strong>Download as ZIP</strong> وقم بإنشاء مستودع يدوي على حساب GitHub الخاص بك ورفعه.</li>
+                    <li>{language === 'ar' ? 'اضغط على قائمة Export في الزاوية العلوية لمنصة AI Studio.' : 'Click on the Export menu in the top corner of the AI Studio workspace.'}</li>
+                    <li>{language === 'ar' ? 'اختر Export to GitHub، وسيتم رفع كامل الكود لمستودعك.' : 'Select Export to GitHub to push your clean code automatically to your repository.'}</li>
+                    <li>{language === 'ar' ? 'أو خذ نسخة كاملة مضغوطة عبر Download as ZIP وقم برفعها يدوياً.' : 'Or download a ZIP archive of the project and push it to your GitHub account.'}</li>
                   </ol>
                 </div>
 
                 {/* Section 2: Cloudflare */}
-                <div className="space-y-2.5 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/60">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5 text-sm">
+                <div className="space-y-2.5 p-4 bg-emerald-50/40 dark:bg-emerald-950/10 rounded-xl border border-emerald-100/10 dark:border-emerald-950/20">
+                  <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 text-sm">
                     <CloudLightning size={16} className="text-emerald-600" />
-                    <span>2. الاستضافة المجانية على Cloudflare Pages</span>
+                    <span>{language === 'ar' ? '2. الاستضافة المجانية على Cloudflare Pages' : '2. Host Free on Cloudflare Pages'}</span>
                   </span>
-                  <ol className="list-decimal list-inside space-y-2 pl-1 text-emerald-950">
-                    <li>ا�            {/* Real Stats card reflecting checkboxes & values */}
-            <StatsCard tasks={tasks} language={language} />
-
-            {/* Calendar scheduler selector */}
-            <MonthSelector 
-              selectedMonth={selectedMonth} 
-              onMonthChange={(m) => {
-                setSelectedMonth(m);
-                setSelectedDay('all'); // reset day filter when month changes to avoid confusion
-              }} 
-              tasks={tasks}
-              language={language}
-            />
-
-            {/* Achievement Trend chart - Recharts line chart */}
-            <TrendChart tasks={tasks} language={language} />
-
-            {/* Helpful Quotes/Tips block */}
-            <div className="bg-emerald-50/55 dark:bg-emerald-950/15 border border-emerald-100 dark:border-emerald-950/30 rounded-2xl p-4 text-xs text-emerald-800 dark:text-emerald-300 space-y-2 transition-all">
-              <span className="font-bold block text-emerald-900 dark:text-emerald-400 text-sm">💡 {t.p_holidayDay}</span>
-              <p className="leading-relaxed">
-                {t.p_tipText}
-              </p>
-            </div>vironment Variables في كلاودفلير.</li>
-                    <li>اضغط على <strong>Save and Deploy</strong> وشاهد تطبيقك يصعد لشبكة كلاودفلير العالمية بثواني!</li>
+                  <ol className="list-decimal list-inside space-y-2 pl-1">
+                    <li>{language === 'ar' ? 'افتح حساب كلاودفلير المجاني ثم توجه لقسم Pages.' : 'Create a free Cloudflare account and navigate to Pages.'}</li>
+                    <li>{language === 'ar' ? 'اربط مستودع GitHub الخاص بك الذي قمت بتصديره للتو.' : 'Connect the GitHub repository that you just created/exported.'}</li>
+                    <li>{language === 'ar' ? 'اضبط أمر البناء إلى npm run build ومسار المخرجات إلى dist.' : 'Set build command to "npm run build" and output directory to "dist".'}</li>
+                    <li>{language === 'ar' ? 'اضغط على Save and Deploy لتشغيل موقعك الفعلي بالكامل!' : 'Click Save and Deploy to launch your production worker live in seconds!'}</li>
                   </ol>
                 </div>
               </div>
@@ -1635,7 +1608,6 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Main Container Dashboard Workspace */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
