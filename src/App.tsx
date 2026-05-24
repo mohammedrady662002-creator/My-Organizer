@@ -223,30 +223,42 @@ export function isRealSupabaseUser(user: any): boolean {
 export default function App() {
   // Language support state
   const [language, setLanguage] = useState<'ar' | 'en'>(() => {
-    return (localStorage.getItem('language') as 'ar' | 'en') || 'ar';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('language') as 'ar' | 'en';
+      return saved || 'ar';
+    }
+    return 'ar';
   });
 
   const t = TRANSLATIONS[language];
 
   // Dark Mode support state
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('theme') === 'dark';
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      return savedTheme === 'dark';
+    }
+    return false;
   });
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+    if (typeof document !== 'undefined') {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
     }
   }, [isDarkMode]);
 
   useEffect(() => {
-    localStorage.setItem('language', language);
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
+    if (typeof document !== 'undefined') {
+      localStorage.setItem('language', language);
+      document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = language;
+    }
   }, [language]);
 
   // Session structures
@@ -1725,10 +1737,10 @@ export default function App() {
                   <div className="lg:col-span-8 space-y-6">
                     
                     {/* Add new task trigger form block */}
-                    <div className="bg-[#1E293B]/30 border border-white/5 rounded-3xl p-5 flex flex-col gap-4">
+                    <div className="bg-white dark:bg-[#1E293B]/30 border border-slate-200/60 dark:border-white/5 rounded-3xl p-5 flex flex-col gap-4 shadow-sm dark:shadow-none">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? 'إدارة وتخطيط اليوم' : 'TASKS MANAGEMENT'}</h3>
+                          <h3 className="text-xs font-black text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? 'إدارة وتخطيط اليوم' : 'TASKS MANAGEMENT'}</h3>
                           <p className="text-xs text-[#64748B] mt-0.5 font-sans">
                             {language === 'ar' ? `قائمة مهام شهر ${getSelectedMonthName()}` : `Viewing scheduler list for ${getSelectedMonthName()}`}
                           </p>
@@ -1771,21 +1783,21 @@ export default function App() {
                     </div>
 
                     {/* Filters Dashboard Panel bar */}
-                    <div className="bg-[#1E293B]/40 rounded-3xl border border-white/5 p-4 space-y-4">
+                    <div className="bg-white dark:bg-[#1E293B]/40 rounded-3xl border border-slate-200/60 dark:border-white/5 p-4 space-y-4 shadow-sm dark:shadow-none">
                       {/* Search box queries */}
-                      <div className="bg-[#0F172A] border border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
-                        <Search size={14} className="text-[#475569]" />
+                      <div className="bg-slate-50 dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+                        <Search size={14} className="text-[#475569] dark:text-[#94A3B8]" />
                         <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder={language === 'ar' ? 'ابحث عن أي مهمة بالاسم أو بالمحتوى المكتوب...' : 'Search tasks by title, agenda details...'}
-                          className="w-full bg-transparent border-none text-xs text-white focus:outline-none focus:ring-0 font-sans"
+                          className="w-full bg-transparent border-none text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-0 font-sans"
                         />
                       </div>
 
                       {/* Select properties tools bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/5">
+                      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-white/5">
                         <div className="flex flex-wrap items-center gap-2">
                           {[
                             { id: 'all', labelAr: 'الكل', labelEn: 'All' },
@@ -1797,8 +1809,8 @@ export default function App() {
                               onClick={() => setStatusFilter(opt.id as any)}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                 statusFilter === opt.id
-                                  ? 'bg-indigo-500/15 text-[#6366F1] border border-indigo-500/20'
-                                  : 'text-[#94A3B8] hover:text-white'
+                                  ? 'bg-indigo-500/15 text-[#6366F1] border border-indigo-505/20'
+                                  : 'text-slate-500 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:text-white'
                               }`}
                             >
                               {language === 'ar' ? opt.labelAr : opt.labelEn}
@@ -1811,22 +1823,22 @@ export default function App() {
                           <select
                             value={priorityFilter}
                             onChange={(e) => setPriorityFilter(e.target.value as any)}
-                            className="bg-[#0F172A] text-[11px] text-[#94A3B8] font-bold border border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
+                            className="bg-slate-50 dark:bg-[#0F172A] text-[11px] text-slate-700 dark:text-[#94A3B8] font-bold border border-slate-200 dark:border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
                           >
-                            <option value="all">{language === 'ar' ? 'كل الأولويات' : 'All Priority'}</option>
-                            <option value="high">{language === 'ar' ? 'عالية الأهمية 🟥' : 'High Priority'}</option>
-                            <option value="medium">{language === 'ar' ? 'متوسطة الأهمية 🟨' : 'Medium Priority'}</option>
-                            <option value="low">{language === 'ar' ? 'منخفضة الأهمية 🟩' : 'Low Priority'}</option>
+                            <option value="all" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأولويات' : 'All Priority'}</option>
+                            <option value="high" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'عالية الأهمية 🟥' : 'High Priority'}</option>
+                            <option value="medium" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'متوسطة الأهمية 🟨' : 'Medium Priority'}</option>
+                            <option value="low" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'منخفضة الأهمية 🟩' : 'Low Priority'}</option>
                           </select>
 
                           <select
                             value={categoryFilter}
                             onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="bg-[#0F172A] text-[11px] text-[#94A3B8] font-bold border border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
+                            className="bg-slate-50 dark:bg-[#0F172A] text-[11px] text-slate-700 dark:text-[#94A3B8] font-bold border border-slate-200 dark:border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
                           >
-                            <option value="all">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</option>
+                            <option value="all" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</option>
                             {CATEGORIES.map(c => (
-                              <option key={c.id} value={c.id}>{language === 'ar' ? c.name : c.id}</option>
+                              <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? c.name : c.id}</option>
                             ))}
                           </select>
                         </div>
@@ -1848,10 +1860,10 @@ export default function App() {
                               {/* Day Label Tag */}
                               <div className="flex items-center gap-2.5 px-1.5">
                                 <span className="w-1.5 h-3 rounded-full bg-[#6366F1] inline-block" />
-                                <h4 className="font-extrabold text-sm text-white">
+                                <h4 className="font-extrabold text-sm text-slate-800 dark:text-white font-sans">
                                   {language === 'ar' ? `يوم ${day} من شهر ${getSelectedMonthName()}` : `Day ${day} ${getSelectedMonthName()}`}
                                 </h4>
-                                <span className="text-[10px] text-[#475569] font-black bg-[#1E293B] px-2 py-0.5 rounded-full font-mono">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-[#1E293B] px-2 py-0.5 rounded-full font-mono">
                                   {dayTasks.length} {language === 'ar' ? 'مهام' : 'tasks'}
                                 </span>
                               </div>
@@ -1883,11 +1895,11 @@ export default function App() {
                           );
                         })
                       ) : (
-                        <div className="p-12 text-center rounded-3xl bg-[#1E293B]/10 border border-white/5 flex flex-col items-center gap-3">
-                          <Calendar size={32} className="text-[#334155]" />
+                        <div className="p-12 text-center rounded-3xl bg-slate-100/50 dark:bg-[#1E293B]/10 border border-slate-200/60 dark:border-white/5 flex flex-col items-center gap-3">
+                          <Calendar size={32} className="text-slate-400 dark:text-[#334155]" />
                           <div>
-                            <h4 className="text-xs font-bold text-white mb-1">{language === 'ar' ? 'جدول المخططات فارغ' : 'A clean scheduler horizon'}</h4>
-                            <p className="text-[11px] text-[#64748B]">{language === 'ar' ? 'لا توجد مهام مطابقة لفلاتر التصفية النشطة.' : 'No tasks map onto your active filter rules.'}</p>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-white mb-1">{language === 'ar' ? 'جدول المخططات فارغ' : 'A clean scheduler horizon'}</h4>
+                            <p className="text-[11px] text-slate-400 dark:text-[#64748B]">{language === 'ar' ? 'لا توجد مهام مطابقة لفلاتر التصفية النشطة.' : 'No tasks map onto your active filter rules.'}</p>
                           </div>
                         </div>
                       )}
@@ -1915,14 +1927,14 @@ export default function App() {
                     <TrendChart tasks={tasks} />
 
                     {/* Export / Sync Options card */}
-                    <div className="p-5 rounded-3xl bg-[#1E293B]/40 border border-white/5 space-y-4">
+                    <div className="p-5 rounded-3xl bg-white dark:bg-[#1E293B]/40 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-sm dark:shadow-none">
                       <div>
-                        <h4 className="text-xs font-bold text-white">{language === 'ar' ? 'الاستيراد والتصدير والمزامنة' : 'Data Integrity & Feeds'}</h4>
-                        <p className="text-[10px] text-[#64748B] mt-1 font-sans">{language === 'ar' ? 'قم بتصدير مهام حياتك لتقويمات Google أو Apple بنقرة واحدة.' : 'Consolidate plans and push outputs to Apple or Google feeds.'}</p>
+                        <h4 className="text-xs font-bold text-slate-800 dark:text-white">{language === 'ar' ? 'الاستيراد والتصدير والمزامنة' : 'Data Integrity & Feeds'}</h4>
+                        <p className="text-[10px] text-slate-500 dark:text-[#64748B] mt-1 font-sans">{language === 'ar' ? 'قم بتصدير مهام حياتك لتقويمات Google أو Apple بنقرة واحدة.' : 'Consolidate plans and push outputs to Apple or Google feeds.'}</p>
                       </div>
                       <button
                         onClick={() => exportTasksToICS(tasks)}
-                        className="w-full py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-white/5 text-[#CBD5E1] hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        className="w-full py-2.5 rounded-xl bg-slate-50 dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 text-slate-700 dark:text-[#CBD5E1] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <Calendar size={13} className="text-[#6366F1]" />
                         <span>{language === 'ar' ? 'تصدير للتقويم (.ics)' : 'Export calendar feed (.ics)'}</span>

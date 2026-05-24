@@ -167,12 +167,12 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
             tag: language === 'ar' ? 'متوسط نسبة التقدم' : 'Efficiency score'
           }
         ].map((widget) => (
-          <div key={widget.id} className={`p-5 rounded-2xl bg-gradient-to-br bg-[#1E293B] border ${widget.bgClass}`}>
-            <span className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? widget.labelAr : widget.labelEn}</span>
+          <div key={widget.id} className={`p-5 rounded-2xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none bg-gradient-to-br ${widget.bgClass}`}>
+            <span className="block text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? widget.labelAr : widget.labelEn}</span>
             <span className={`text-2xl font-black block mt-2 font-mono ${widget.textClass}`}>
               {widget.val}
             </span>
-            <span className="text-[9px] text-[#475569] block mt-1">{widget.tag}</span>
+            <span className="text-[9px] text-slate-400 dark:text-slate-500 block mt-1 font-sans">{widget.tag}</span>
           </div>
         ))}
       </div>
@@ -181,14 +181,14 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Weekly Productivity Area Chart */}
-        <div className="lg:col-span-8 bg-[#1E293B] rounded-3xl border border-white/5 p-6 flex flex-col justify-between">
+        <div className="lg:col-span-8 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 font-sans">
                 <TrendingUp size={16} className="text-[#6366F1]" />
                 <span>{language === 'ar' ? 'منحنى الإنجاز والإنتاجية الأسبوعية' : 'Weekly Productivity Curve'}</span>
               </h3>
-              <p className="text-[10px] text-[#94A3B8] mt-0.5">{language === 'ar' ? 'مقارنة المهام المكتملة مقابل المهام المنشأة بالـ 7 أيام الأخيرة' : 'Completed tasks compared to overall created scope'}</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5 font-sans">{language === 'ar' ? 'مقارنة المهام المكتملة مقابل المهام المنشأة بالـ 7 أيام الأخيرة' : 'Completed tasks compared to overall created scope'}</p>
             </div>
           </div>
 
@@ -220,13 +220,13 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
         </div>
 
         {/* Categories Distribution Pie Widget */}
-        <div className="lg:col-span-4 bg-[#1E293B] rounded-3xl border border-white/5 p-6 flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5 mb-1">
-              <PieIcon size={16} className="text-purple-400" />
+            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 font-sans">
+              <PieIcon size={16} className="text-purple-500 dark:text-purple-400" />
               <span>{language === 'ar' ? 'توزيع المهام بحسب التصنيف' : 'Category Allocation'}</span>
             </h3>
-            <p className="text-[10px] text-[#94A3B8]">{language === 'ar' ? 'النسب المئوية لحجم المهام في كل تصنيف' : 'Composition volume metric'}</p>
+            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] font-sans">{language === 'ar' ? 'النسب المئوية لحجم المهام في كل تصنيف' : 'Composition volume metric'}</p>
           </div>
 
           <div className="h-44 w-full flex items-center justify-center relative my-4">
@@ -254,15 +254,15 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
             
             {/* Center indicator rate */}
             <div className="absolute text-center flex flex-col select-none">
-              <span className="text-xs font-bold text-white">{language === 'ar' ? 'التصنيفات' : 'Categories'}</span>
-              <span className="text-[9px] text-[#475569] font-mono font-bold">{categoryChartData.length} active</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-white font-sans">{language === 'ar' ? 'التصنيفات' : 'Categories'}</span>
+              <span className="text-[9px] text-slate-400 dark:text-[#64748B] font-mono font-bold">{categoryChartData.length} active</span>
             </div>
           </div>
 
           {/* Legend indicator names */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-2 border-t border-white/5">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-2 border-t border-slate-100 dark:border-white/5">
             {categoryChartData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-1.5 text-[10px] text-[#94A3B8]">
+              <div key={entry.name} className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-[#94A3B8] font-sans">
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                 <span>{entry.name} ({entry.value})</span>
               </div>
