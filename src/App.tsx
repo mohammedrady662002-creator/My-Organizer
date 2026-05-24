@@ -36,7 +36,8 @@ import {
   Smartphone,
   Facebook,
   Chrome,
-  Loader
+  Loader,
+  Mail
 } from 'lucide-react';
 import { Task } from './types';
 import { MONTHS, CATEGORIES } from './constants';
@@ -1459,7 +1460,7 @@ export default function App() {
               /* Forgot Password Form */
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5 font-sans">
                     {language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}
                   </label>
                   <input
@@ -1475,7 +1476,7 @@ export default function App() {
                 <button
                   type="submit"
                   disabled={authActionLoading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer font-sans"
                 >
                   {authActionLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1492,101 +1493,235 @@ export default function App() {
                       setAuthError('');
                       setAuthSuccessMsg('');
                     }}
-                    className="text-xs text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer font-sans"
                   >
                     {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Back to Login'}
                   </button>
                 </div>
               </form>
             ) : (
-              /* Email Authentication Form (Sign In / Sign Up) */
-              <form onSubmit={handleAuthAction} className="space-y-4">
-                {isSingupMode && (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                      {language === 'ar' ? 'اسم المستخدم' : 'Username'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={authUsername}
-                      onChange={(e) => setAuthUsername(e.target.value)}
-                      placeholder={language === 'ar' ? 'مثال: محمد' : 'e.g., Mohammed'}
-                      className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                    />
+              /* Authentication Forms Wrapper */
+              <div className="space-y-4">
+                {/* Auth Mode Tabs */}
+                {(!isForgotPasswordMode) && (
+                  <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <button 
+                      onClick={() => setAuthTab('email')}
+                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'email' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-1.5"><Mail size={14} />{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</div>
+                    </button>
+                    <button 
+                      onClick={() => setAuthTab('phone')}
+                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'phone' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-1.5"><Smartphone size={14} />{language === 'ar' ? 'رقم الهاتف' : 'Phone'}</div>
+                    </button>
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
-                  <input
-                    type="email"
-                    required
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                  />
-                </div>
+                {authTab === 'email' ? (
+                  <form onSubmit={handleAuthAction} className="space-y-4">
+                    {isSingupMode && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                          {language === 'ar' ? 'اسم المستخدم' : 'Username'}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={authUsername}
+                          onChange={(e) => setAuthUsername(e.target.value)}
+                          placeholder={language === 'ar' ? 'مثال: محمد' : 'e.g., Mohammed'}
+                          className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                        />
+                      </div>
+                    )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-slate-500">{t.passwordField}</label>
-                    {!isSingupMode && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
+                      <input
+                        type="email"
+                        required
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-bold text-slate-500">{t.passwordField}</label>
+                        {!isSingupMode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsForgotPasswordMode(true);
+                              setAuthError('');
+                              setAuthSuccessMsg('');
+                            }}
+                            className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 hover:underline cursor-pointer"
+                          >
+                            {language === 'ar' ? 'نسيت كلمة السر؟' : 'Forgot Password?'}
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="******"
+                        className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authActionLoading}
+                      className="w-full py-3 bg-[#10b981] hover:bg-[#059669] disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer font-sans"
+                    >
+                      {authActionLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        isSingupMode 
+                          ? (language === 'ar' ? 'إنشاء حساب جديد بالبريد' : 'Create Email Account') 
+                          : (language === 'ar' ? 'تسجيل دخول بالبريد' : 'Sign In with Email')
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handlePhonePasswordAuth} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                        {language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={phoneNo}
+                        onChange={(e) => setPhoneNo(e.target.value)}
+                        placeholder="+201012345678"
+                        className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium ltr-dir"
+                        dir="ltr"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.passwordField}</label>
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={phonePassword}
+                        onChange={(e) => setPhonePassword(e.target.value)}
+                        placeholder="******"
+                        className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authActionLoading}
+                      className="w-full py-3 bg-[#10b981] hover:bg-[#059669] disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer font-sans"
+                    >
+                      {authActionLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        isPhoneSignUp 
+                          ? (language === 'ar' ? 'إنشاء حساب جديد بالهاتف' : 'Create Phone Account') 
+                          : (language === 'ar' ? 'تسجيل دخول بالهاتف' : 'Sign In with Phone')
+                      )}
+                    </button>
+                    
+                    <div className="text-center pt-1">
                       <button
                         type="button"
                         onClick={() => {
-                          setIsForgotPasswordMode(true);
+                          setIsPhoneSignUp(!isPhoneSignUp);
                           setAuthError('');
                           setAuthSuccessMsg('');
                         }}
-                        className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 hover:underline cursor-pointer"
+                        className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:underline cursor-pointer"
                       >
-                        {language === 'ar' ? 'نسيت كلمة السر؟' : 'Forgot Password?'}
+                        {isPhoneSignUp 
+                          ? (language === 'ar' ? 'مسجل مسبقاً؟ سجل الدخول بالهاتف' : 'Already registered? Sign in via Phone.') 
+                          : (language === 'ar' ? 'تسجيل رقم جديد كحساب' : 'Register new phone number.')}
                       </button>
-                    )}
+                    </div>
+                  </form>
+                )}
+
+                {!isSingupMode && authTab === 'email' && (
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignupMode(!isSingupMode);
+                        setAuthError('');
+                        setAuthSuccessMsg('');
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:underline cursor-pointer"
+                    >
+                      {language === 'ar' ? 'ليس لديك حساب؟ سجل حساباً جديداً' : "Don't have an account? Sign Up"}
+                    </button>
                   </div>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="******"
-                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                  />
+                )}
+                
+                {isSingupMode && authTab === 'email' && (
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignupMode(!isSingupMode);
+                        setAuthError('');
+                        setAuthSuccessMsg('');
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:underline cursor-pointer"
+                    >
+                      {language === 'ar' ? 'لديك حساب بالفعل؟ سجل دخولك' : 'Already have an account? Sign In'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Social Login Divider */}
+                <div className="flex items-center gap-3 pt-4">
+                  <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+                    {language === 'ar' ? 'أو عبر' : 'OR CONTINUE WITH'}
+                  </span>
+                  <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={authActionLoading}
-                  className="w-full py-3 bg-[#6366F1] hover:bg-[#4F46E5] disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer font-sans"
-                >
-                  {authActionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    isSingupMode 
-                      ? (language === 'ar' ? 'إنشاء حساب جديد' : 'Create Account') 
-                      : (language === 'ar' ? 'تسجيل دخول' : 'Sign In')
-                  )}
-                </button>
-
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSignupMode(!isSingupMode);
-                      setAuthError('');
-                      setAuthSuccessMsg('');
-                    }}
-                    className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:underline cursor-pointer"
+                {/* Social Buttons */}
+                <div className="grid grid-cols-2 gap-3 pb-2">
+                  <button 
+                    onClick={() => handleSocialSignIn('google')}
+                    disabled={authActionLoading}
+                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
-                    {isSingupMode 
-                      ? (language === 'ar' ? 'لديك حساب بالفعل؟ سجل دخولك' : 'Already have an account? Sign In') 
-                      : (language === 'ar' ? 'ليس لديك حساب؟ سجل حساباً جديداً' : "Don't have an account? Sign Up")}
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Google
+                  </button>
+                  <button 
+                    onClick={() => handleSocialSignIn('facebook')}
+                    disabled={authActionLoading}
+                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6c.86 0 1.9.15 1.9.15v2.1h-1.07c-1.05 0-1.33.65-1.33 1.28V12h2.36l-.38 3h-1.98v6.8C18.56 20.87 22 16.84 22 12z" />
+                    </svg>
+                    Facebook
                   </button>
                 </div>
-              </form>
+              </div>
             )}
           </div>
         </main>
