@@ -156,54 +156,90 @@ export default function TaskItem({
   };
 
   return (
-    <motion.div
-      layout
-      variants={itemVariants}
-      whileHover={{ 
-        y: -4, 
-        scale: 1.005,
-        boxShadow: '0 12px 24px -10px rgba(16, 185, 129, 0.12), 0 4px 6px -4px rgba(0, 0, 0, 0.04)' 
-      }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragEnd={onDragEnd}
-      onDrop={onDrop}
-      className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-        isDragging
-          ? 'opacity-40 border-dashed border-emerald-400 dark:border-emerald-600 bg-slate-100/50 dark:bg-slate-950/20 shadow-none cursor-grabbing'
-          : isDragOver
-            ? 'scale-[1.01] ring-2 ring-emerald-400 dark:ring-emerald-500 border-emerald-400 dark:border-emerald-500 shadow-lg cursor-grabbing'
-            : task.completed 
-              ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
-              : isOverdue
-                ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-250 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50 hover:border-rose-400'
-                : 'border-slate-120 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/40'
-      }`}
-      id={`task-item-${task.id}`}
-    >
-      {/* Visual background indicator for high priority */}
-      {task.priority === 'high' && !task.completed && (
-        <div className={`absolute top-0 bottom-0 w-1 bg-rose-500 ${language === 'en' ? 'left-0 rounded-l-xl' : 'right-0 rounded-r-xl'}`} />
-      )}
-      
-      {/* Overdue visual edge indicator */}
-      {isOverdue && !task.completed && (
-        <div className={`absolute top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400 animate-pulse ${language === 'en' ? 'right-0 rounded-r-xl' : 'left-0 rounded-l-xl'}`} />
-      )}
-
-      {/* Main task content */}
-      <div className="flex items-start gap-2.5 w-full md:w-3/4">
-        {/* Grip Handler for dragging context */}
-        <div 
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 p-1.5 transition-colors self-start mt-0.5"
-          title={language === 'ar' ? 'اسحب لإعادة الترتيب' : 'Drag to reorder'}
-        >
-          <GripVertical size={16} />
+    <div className="relative overflow-hidden rounded-xl w-full group/swipe select-none" style={{ touchAction: 'pan-y' }}>
+      {/* BACKGROUND SWIPE ACTION TRACKS */}
+      <div className="absolute inset-0 flex items-center justify-between pointer-events-none select-none z-0 rounded-xl">
+        {/* Left Swipe Track (revealed on Swipe Right) -> Green/Complete */}
+        <div className="absolute inset-y-0 left-0 right-1/2 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-l-xl flex items-center justify-start px-6 gap-2 text-white">
+          <motion.div animate={{ scale: [1, 1.25, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+            <Check size={18} strokeWidth={3.5} />
+          </motion.div>
+          <span className="text-xs font-bold">
+            {language === 'ar' ? 'شطب المهمة' : 'Complete Task'}
+          </span>
         </div>
+        
+        {/* Right Swipe Track (revealed on Swipe Left) -> Red/Delete */}
+        <div className="absolute inset-y-0 right-0 left-1/2 bg-gradient-to-l from-rose-600 to-rose-500 rounded-r-xl flex items-center justify-end px-6 gap-2 text-white">
+          <span className="text-xs font-bold">
+            {language === 'ar' ? 'حذف المهمة' : 'Delete Task'}
+          </span>
+          <motion.div animate={{ rotate: [-10, 10, -10] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+            <Trash2 size={16} />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* FRONT DRAGGABLE LAYER */}
+      <motion.div
+        layout
+        variants={itemVariants}
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.5, right: 0.5 }}
+        onDragEnd={(event, info) => {
+          if (info.offset.x > 140) {
+            onToggle(task.id);
+          } else if (info.offset.x < -140) {
+            onDelete(task.id);
+          }
+        }}
+        whileHover={{ 
+          y: -4, 
+          scale: 1.005,
+          boxShadow: '0 12px 24px -10px rgba(16, 185, 129, 0.12), 0 4px 6px -4px rgba(0, 0, 0, 0.04)' 
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        onDragOver={onDragOver}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all duration-300 z-10 cursor-grab active:cursor-grabbing ${
+          isDragging
+            ? 'opacity-40 border-dashed border-emerald-400 dark:border-emerald-600 bg-slate-100/50 dark:bg-slate-950/20 shadow-none'
+            : isDragOver
+              ? 'scale-[1.01] ring-2 ring-emerald-400 dark:ring-emerald-500 border-emerald-400 dark:border-emerald-500 shadow-lg'
+              : task.completed 
+                ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
+                : isOverdue
+                  ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-250 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50 hover:border-rose-400'
+                  : 'border-slate-120 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/40'
+        }`}
+        id={`task-item-${task.id}`}
+      >
+        {/* Visual background indicator for high priority */}
+        {task.priority === 'high' && !task.completed && (
+          <div className={`absolute top-0 bottom-0 w-1 bg-rose-500 ${language === 'en' ? 'left-0 rounded-l-xl' : 'right-0 rounded-r-xl'}`} />
+        )}
+        
+        {/* Overdue visual edge indicator */}
+        {isOverdue && !task.completed && (
+          <div className={`absolute top-0 bottom-0 w-1 bg-rose-500 dark:bg-rose-400 animate-pulse ${language === 'en' ? 'right-0 rounded-r-xl' : 'left-0 rounded-l-xl'}`} />
+        )}
+  
+        {/* Main task content */}
+        <div className="flex items-start gap-2.5 w-full md:w-3/4">
+          {/* Grip Handler for dragging context (HTML5 Drag only from Grip) */}
+          <div 
+            draggable={draggable}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 p-1.5 transition-colors self-start mt-0.5 z-20"
+            title={language === 'ar' ? 'اسحب لإعادة الترتيب' : 'Drag to reorder'}
+          >
+            <GripVertical size={16} />
+          </div>
 
         {/* Custom Circular Checkbox Button */}
         <motion.button
@@ -314,5 +350,6 @@ export default function TaskItem({
         </motion.button>
       </div>
     </motion.div>
+    </div>
   );
 }

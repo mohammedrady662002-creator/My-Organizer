@@ -385,6 +385,7 @@ export default function App() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
         setTasks(mapped);
+        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(mapped));
       }
     } catch (e) {
       console.error(e);
@@ -523,29 +524,30 @@ export default function App() {
       return;
     }
 
-    if (!isSupabaseConfigured || !supabase || user.id === 'guest-session-1001') {
-      // Offline fallback: LocalStorage loading
-      const local = localStorage.getItem(`tasks_local_${user.id}`);
-      if (local) {
-        try {
-          const loaded: Task[] = JSON.parse(local);
-          loaded.sort((a, b) => {
-            const posA = a.position !== undefined ? a.position : 0;
-            const posB = b.position !== undefined ? b.position : 0;
-            if (posA !== posB) return posA - posB;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-          setTasks(loaded);
-        } catch {
-          setTasks([]);
-        }
-      } else {
-        // Seed default template for instant wow experience
-        const defaultSeeds = SEED_TASKS_TEMPLATE(user.id);
-        const initializedSeeds = defaultSeeds.map((t, idx) => ({ ...t, position: idx }));
-        setTasks(initializedSeeds);
-        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(initializedSeeds));
+    // Always pre-load from LocalStorage as a fast warm cache so tasks are instantly visible on refresh
+    const local = localStorage.getItem(`tasks_local_${user.id}`);
+    if (local) {
+      try {
+        const loaded: Task[] = JSON.parse(local);
+        loaded.sort((a, b) => {
+          const posA = a.position !== undefined ? a.position : 0;
+          const posB = b.position !== undefined ? b.position : 0;
+          if (posA !== posB) return posA - posB;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setTasks(loaded);
+      } catch {
+        // ignore JSON syntax errors
       }
+    } else if (!isSupabaseConfigured || !supabase || user.id === 'guest-session-1001') {
+      // Seed default template only if there is no localStorage and guest mode/offline
+      const defaultSeeds = SEED_TASKS_TEMPLATE(user.id);
+      const initializedSeeds = defaultSeeds.map((t, idx) => ({ ...t, position: idx }));
+      setTasks(initializedSeeds);
+      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(initializedSeeds));
+    }
+
+    if (!isSupabaseConfigured || !supabase || user.id === 'guest-session-1001') {
       return;
     }
 
@@ -993,6 +995,10 @@ export default function App() {
         time: taskData.time
       };
 
+      const updatedList = tasks.map(t => t.id === editingTask.id ? updatedItem : t);
+      setTasks(updatedList);
+      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
+
       if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
         try {
           const { error } = await supabase
@@ -1000,19 +1006,11 @@ export default function App() {
             .update(toDBTask(updatedItem, user.id))
             .eq('id', editingTask.id);
           if (error) {
-            // fallback state update if DB has issues
-            console.error('Failed to sync to database, editing locally', error.message);
+            console.error('Failed to sync edit to database:', error.message);
           }
-          // Optimistically update locally
-          setTasks(prev => prev.map(t => t.id === editingTask.id ? updatedItem : t));
         } catch (e) {
           console.error(e);
         }
-      } else {
-        // Offline / storage save
-        const updatedList = tasks.map(t => t.id === editingTask.id ? updatedItem : t);
-        setTasks(updatedList);
-        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
       }
       setEditingTask(null);
       setIsFormOpen(false);
@@ -1036,38 +1034,28 @@ export default function App() {
         position: dayTasksCount
       };
 
+      const updatedList = [newItem, ...tasks];
+      updatedList.sort((a, b) => {
+        const posA = a.position !== undefined ? a.position : 0;
+        const posB = b.position !== undefined ? b.position : 0;
+        if (posA !== posB) return posA - posB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+      setTasks(updatedList);
+      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
+
       if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
         try {
           const { error } = await supabase
             .from('tasks')
             .insert(toDBTask(newItem, user.id));
           if (error) {
-            console.error('Failed database sync on insert', error.message);
+            console.error('Failed database sync on insert:', error.message);
           }
-          setTasks(prev => {
-            const newList = [newItem, ...prev];
-            newList.sort((a, b) => {
-              const posA = a.position !== undefined ? a.position : 0;
-              const posB = b.position !== undefined ? b.position : 0;
-              if (posA !== posB) return posA - posB;
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-            return newList;
-          });
         } catch (e) {
           console.error(e);
         }
-      } else {
-        // offline save
-        const updatedList = [newItem, ...tasks];
-        updatedList.sort((a, b) => {
-          const posA = a.position !== undefined ? a.position : 0;
-          const posB = b.position !== undefined ? b.position : 0;
-          if (posA !== posB) return posA - posB;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-        setTasks(updatedList);
-        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
       }
       setIsFormOpen(false);
     }
@@ -1079,9 +1067,10 @@ export default function App() {
     if (!task) return;
 
     const nextCompleted = !task.completed;
+    const updatedList = tasks.map(t => t.id === id ? { ...t, completed: nextCompleted } : t);
     
-    // update state optimistically
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: nextCompleted } : t));
+    setTasks(updatedList);
+    localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
     if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
       try {
@@ -1093,15 +1082,14 @@ export default function App() {
       } catch (err) {
         console.error(err);
       }
-    } else {
-      const updatedList = tasks.map(t => t.id === id ? { ...t, completed: nextCompleted } : t);
-      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
     }
   };
 
   // Handler: Task delete
   const handleDeleteTask = async (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
+    const updatedList = tasks.filter(t => t.id !== id);
+    setTasks(updatedList);
+    localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
     if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
       try {
@@ -1113,9 +1101,6 @@ export default function App() {
       } catch (err) {
         console.error(err);
       }
-    } else {
-      const updatedList = tasks.filter(t => t.id !== id);
-      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
     }
 
     if (editingTask?.id === id) {
@@ -1849,6 +1834,17 @@ export default function App() {
 
             {/* Timelines container */}
             <div className="space-y-6" id="tasks-timeline-container">
+              {!tasksLoading && sortedDays.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50/70 border border-emerald-100/60 dark:bg-emerald-950/20 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs text-start md:hidden font-sans select-none animate-pulse">
+                  <span className="text-sm">💡</span>
+                  <span>
+                    {language === 'ar' 
+                      ? 'تلميح الهاتف: اسحب أي مهمة لليمين للشطب (Complete)، أو لليسار للحذف السريع!' 
+                      : 'Mobile Tip: Swipe any task right to complete, or left to delete instantly!'}
+                  </span>
+                </div>
+              )}
+
               {tasksLoading ? (
                 <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
                   <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2" />

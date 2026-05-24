@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     completed BOOLEAN NOT NULL DEFAULT false,
     priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
     category TEXT NOT NULL DEFAULT 'personal',
+    time TEXT,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     position INTEGER DEFAULT 0
