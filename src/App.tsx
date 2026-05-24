@@ -681,7 +681,7 @@ export default function App() {
     if (!user || tasksLoading || tasks.length === 0) return;
     
     const todayStr = new Date().toLocaleDateString('en-US'); // e.g., "5/24/2026"
-    const injectedKey = `routines_injected_v2_${user.id}_${todayStr}`;
+    const injectedKey = `routines_injected_v3_${user.id}_${todayStr}`;
     if (localStorage.getItem(injectedKey)) return;
 
     const now = new Date();
@@ -692,12 +692,12 @@ export default function App() {
     const habits = [
       { key: 'fajr', title: language === 'ar' ? 'صلاة الفجر' : 'Fajr Prayer', category: 'worship', priority: 'high' as const },
       { key: 'morning_azkar', title: language === 'ar' ? 'أذكار الصباح' : 'Morning Azkar', category: 'worship', priority: 'medium' as const },
+      { key: 'quran', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Quran Reading', category: 'worship', priority: 'high' as const },
       { key: 'dhuhr', title: language === 'ar' ? 'صلاة الظهر' : 'Dhuhr Prayer', category: 'worship', priority: 'high' as const },
       { key: 'asr', title: language === 'ar' ? 'صلاة العصر' : 'Asr Prayer', category: 'worship', priority: 'high' as const },
       { key: 'evening_azkar', title: language === 'ar' ? 'أذكار المساء' : 'Evening Azkar', category: 'worship', priority: 'medium' as const },
       { key: 'maghrib', title: language === 'ar' ? 'صلاة المغرب' : 'Maghrib Prayer', category: 'worship', priority: 'high' as const },
       { key: 'isha', title: language === 'ar' ? 'صلاة العشاء' : 'Isha Prayer', category: 'worship', priority: 'high' as const },
-      { key: 'quran', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Quran Reading', category: 'worship', priority: 'high' as const },
       { key: 'gym', title: language === 'ar' ? 'الجيم' : 'Gym Workout', category: 'health', priority: 'medium' as const }
     ];
     
