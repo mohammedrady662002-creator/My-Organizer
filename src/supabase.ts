@@ -10,9 +10,15 @@ export const isSupabaseConfigured =
   supabaseUrl !== 'https://your-project-url.supabase.co' && 
   supabaseAnonKey !== 'your-supabase-anon-key';
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+let client: SupabaseClient | null = null;
+if (isSupabaseConfigured) {
+  try {
+    client = createClient(supabaseUrl, supabaseAnonKey);
+  } catch (error) {
+    console.warn("Failed to initialize Supabase client. Invalid URL or Key.", error);
+  }
+}
+export const supabase: SupabaseClient | null = client;
 
 /**
  * SQL script for Supabase Database setup.

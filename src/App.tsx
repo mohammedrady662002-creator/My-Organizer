@@ -398,6 +398,10 @@ export default function App() {
         setUser(u);
       }
       setAuthLoading(false);
+    }).catch(err => {
+      console.error("Supabase auth session error:", err);
+      setUser(null);
+      setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_err, session) => {
