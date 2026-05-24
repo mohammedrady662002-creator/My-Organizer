@@ -266,9 +266,9 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           </span>
           <div className="flex justify-between text-xs text-slate-600 dark:text-[#CBD5E1]">
             <span>{language === 'ar' ? 'المهام الإجمالية المقروءة:' : 'Total tracked tasks:'}</span>
-            <span className="font-mono font-bold text-slate-850 dark:text-white">{tasks.length}</span>
+            <span className="font-mono font-bold text-slate-800 dark:text-white">{tasks.length}</span>
           </div>
-          <div className="flex justify-between text-xs text-slate-650 dark:text-[#CBD5E1]">
+          <div className="flex justify-between text-xs text-slate-600 dark:text-[#CBD5E1]">
             <span>{language === 'ar' ? 'قيد الانتظار:' : 'Pending queues:'}</span>
             <span className="font-mono font-bold text-yellow-600 dark:text-yellow-400">{tasks.filter(t => !t.completed).length}</span>
           </div>

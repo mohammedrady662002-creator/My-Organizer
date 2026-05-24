@@ -192,7 +192,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
           </h2>
           <button
             onClick={handleCreateNote}
-            className="p-1.5 rounded-xl bg-indigo-505/10 bg-indigo-500/10 hover:bg-indigo-500/20 text-[#6366F1] border border-indigo-500/15 cursor-pointer transition-colors"
+            className="p-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-[#6366F1] border border-indigo-500/15 cursor-pointer transition-colors"
             title={language === 'ar' ? 'ملاحظة جديدة' : 'Create new note'}
           >
             <Plus size={16} />
@@ -301,7 +301,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                 <button
                   onClick={handleAiSummarize}
                   disabled={isAiLoading || !editContent.trim()}
-                  className="px-4 py-2 bg-indigo-50 dark:bg-gradient-to-r dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-150 dark:border-indigo-500/30 hover:border-[#6366F1] text-indigo-750 dark:text-[#c7d2fe] hover:text-indigo-900 dark:hover:text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-indigo-50 dark:bg-gradient-to-r dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-100 dark:border-indigo-500/30 hover:border-[#6366F1] text-indigo-700 dark:text-[#c7d2fe] hover:text-indigo-900 dark:hover:text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isAiLoading ? (
                     <Loader2 size={13} className="animate-spin text-[#6366F1]" />
@@ -341,7 +341,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                   setTimeout(handleSaveActiveNote, 10);
                 }}
                 placeholder={language === 'ar' ? 'ابدأ تدوين مذكراتك وأفكارك بنمط حر هنا...' : 'Start recording your thoughts freely here...'}
-                className="w-full flex-1 bg-transparent border-none text-xs text-slate-650 dark:text-[#CBD5E1] focus:outline-none focus:ring-0 leading-relaxed resize-none h-60 md:h-[220px] font-sans placeholder-slate-400/40 dark:placeholder-white/10"
+                className="w-full flex-1 bg-transparent border-none text-xs text-slate-600 dark:text-[#CBD5E1] focus:outline-none focus:ring-0 leading-relaxed resize-none h-60 md:h-[220px] font-sans placeholder-slate-400/40 dark:placeholder-white/10"
               />
 
               {/* AI Summary outcome panel */}

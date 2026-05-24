@@ -26,17 +26,45 @@ interface PomodoroTimerProps {
 }
 
 export default function PomodoroTimer({ language }: PomodoroTimerProps) {
+  const [workDuration, setWorkDuration] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoro_work_duration');
+      return saved ? parseInt(saved, 10) : 25;
+    }
+    return 25;
+  });
+  const [shortDuration, setShortDuration] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoro_short_duration');
+      return saved ? parseInt(saved, 10) : 5;
+    }
+    return 5;
+  });
+  const [longDuration, setLongDuration] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoro_long_duration');
+      return saved ? parseInt(saved, 10) : 15;
+    }
+    return 15;
+  });
+
   const [sessionType, setSessionType] = useState<'work' | 'short' | 'long'>('work');
-  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+  const [secondsLeft, setSecondsLeft] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoro_work_duration');
+      return (saved ? parseInt(saved, 10) : 25) * 60;
+    }
+    return 25 * 60;
+  });
   const [isRunning, setIsRunning] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [focusLogs, setFocusLogs] = useState<FocusLog[]>([]);
 
-  // Config presets in seconds
+  // Config presets in seconds (dynamic from state)
   const PRESETS = {
-    work: 25 * 60,
-    short: 5 * 60,
-    long: 15 * 60
+    work: workDuration * 60,
+    short: shortDuration * 60,
+    long: longDuration * 60
   };
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -251,7 +279,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             {/* Sound Mute Trigger */}
             <button 
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="mt-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-850 dark:hover:text-white transition-colors cursor-pointer"
+              className="mt-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
             >
               {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
             </button>
@@ -262,7 +290,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
         <div className="flex items-center gap-4 mt-8">
           <button
             onClick={handleReset}
-            className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#0F172A] dark:hover:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-450 dark:text-[#94A3B8] dark:hover:text-white hover:text-slate-800 transition-all cursor-pointer"
+            className="p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#0F172A] dark:hover:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-500 dark:text-[#94A3B8] dark:hover:text-white hover:text-slate-800 transition-all cursor-pointer"
             title={language === 'ar' ? 'إعادة تعيين المؤقت' : 'Reset focus counter'}
           >
             <RotateCcw size={18} />
@@ -298,7 +326,57 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       <div className="lg:col-span-4 bg-white dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
         
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          {/* Custom Session Settings */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 space-y-3 shadow-inner">
+            <h4 className="text-[10px] font-black text-[#6366F1] uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles size={11} className="text-[#6366F1]" />
+              <span>{language === 'ar' ? 'إعداد فترات مخصصة' : 'Custom Session Times'}</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[9px] font-bold text-[#64748B] dark:text-[#94A3B8] mb-1">
+                  {language === 'ar' ? 'التركيز (بالدقائق)' : 'Focus (Mins)'}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="180"
+                  value={workDuration}
+                  onChange={(e) => {
+                    const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                    setWorkDuration(val);
+                    localStorage.setItem('pomodoro_work_duration', val.toString());
+                    if (sessionType === 'work' && !isRunning) {
+                      setSecondsLeft(val * 60);
+                    }
+                  }}
+                  className="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-[#64748B] dark:text-[#94A3B8] mb-1">
+                  {language === 'ar' ? 'الراحة (بالدقائق)' : 'Break (Mins)'}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={shortDuration}
+                  onChange={(e) => {
+                    const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                    setShortDuration(val);
+                    localStorage.setItem('pomodoro_short_duration', val.toString());
+                    if (sessionType === 'short' && !isRunning) {
+                      setSecondsLeft(val * 60);
+                    }
+                  }}
+                  className="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
             <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Timer size={16} className="text-[#6366F1]" />
               <span>{language === 'ar' ? 'سجل جلسات التركيز' : 'Focus Session Log'}</span>

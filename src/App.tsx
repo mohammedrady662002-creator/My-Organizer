@@ -1629,7 +1629,7 @@ export default function App() {
             {/* Language Selection Toggle */}
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer text-slate-705 dark:text-white"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer text-slate-700 dark:text-white"
             >
               <Globe size={14} className="text-[#6366F1]" />
               <span className="hidden sm:inline">{language === 'ar' ? 'English' : 'العربية'}</span>
@@ -1638,7 +1638,7 @@ export default function App() {
             {/* Light/Dark Mode Selection Toggle */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer text-slate-705 dark:text-white animate-none"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer text-slate-700 dark:text-white animate-none"
               title={language === 'ar' ? 'تبديل المظهر' : 'Toggle Theme'}
             >
               {isDarkMode ? (
