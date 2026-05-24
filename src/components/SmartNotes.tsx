@@ -161,6 +161,19 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteContent: editContent, language })
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = '';
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || parsed.message;
+        } catch {
+          errMsg = text;
+        }
+        throw new Error(errMsg || `Server error (${res.status})`);
+      }
+
       const data = await res.json();
       if (data.error) {
         setAiError(data.error);
@@ -168,7 +181,7 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
         setAiSummary(data.result);
       }
     } catch (e: any) {
-      setAiError(language === 'ar' ? 'فشل الاتصال بخادم الذكاء الاصطناعي.' : 'Failed to connect to the AI server.');
+      setAiError(e.message || (language === 'ar' ? 'فشل الاتصال بخادم الذكاء الاصطناعي.' : 'Failed to connect to the AI server.'));
     } finally {
       setIsAiLoading(false);
     }

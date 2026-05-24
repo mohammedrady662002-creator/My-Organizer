@@ -10,18 +10,26 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Initialize Gemini client on the server
-const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenAI | null = null;
-if (apiKey) {
-  ai = new GoogleGenAI({
-    apiKey: apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
+// Initialize Gemini client lazily on the server
+let aiInstance: GoogleGenAI | null = null;
+
+function getGeminiClient(): GoogleGenAI {
+  const currentKey = process.env.GEMINI_API_KEY;
+  if (!currentKey) {
+    throw new Error("GEMINI_API_KEY is not configured on the server. Please add it in the Settings panel.");
+  }
+  
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({
+      apiKey: currentKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
       }
-    }
-  });
+    });
+  }
+  return aiInstance;
 }
 
 // -------------------------------------------------------------
@@ -30,10 +38,8 @@ if (apiKey) {
 
 // General helper to call Gemini
 async function askGemini(prompt: string, sInstruction: string = "You are a professional productivity and life coach assistant."): Promise<string> {
-  if (!ai) {
-    throw new Error("GEMINI_API_KEY is not configured on the server. Please add it in the Settings panel.");
-  }
   try {
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,

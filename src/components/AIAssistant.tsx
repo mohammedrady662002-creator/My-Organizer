@@ -94,6 +94,19 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           language 
         })
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = '';
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || parsed.message;
+        } catch {
+          errMsg = text;
+        }
+        throw new Error(errMsg || `Server error (${res.status})`);
+      }
+
       const data = await res.json();
       if (data.error) {
         setErrorText(data.error);
@@ -105,8 +118,8 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         };
         saveChats([...newHistory, replyMsg]);
       }
-    } catch (err) {
-      setErrorText(language === 'ar' ? 'حدث خطأ أثناء محاولة الاتصال بالخادم.' : 'Error contacting the AI server.');
+    } catch (err: any) {
+      setErrorText(err.message || (language === 'ar' ? 'حدث خطأ أثناء محاولة الاتصال بالخادم.' : 'Error contacting the AI server.'));
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +146,19 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tasks, language })
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = '';
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || parsed.message;
+        } catch {
+          errMsg = text;
+        }
+        throw new Error(errMsg || `Server error (${res.status})`);
+      }
+
       const data = await res.json();
 
       if (data.error) {
@@ -147,7 +173,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         saveChats([...newHistory, replyMsg]);
       }
     } catch (e: any) {
-      setErrorText(language === 'ar' ? 'فشل إرسال التحليل للذكاء الاصطناعي.' : 'Failed to analyze list via AI.');
+      setErrorText(e.message || (language === 'ar' ? 'فشل إرسال التحليل للذكاء الاصطناعي.' : 'Failed to analyze list via AI.'));
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +200,19 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tasks, language })
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let errMsg = '';
+        try {
+          const parsed = JSON.parse(text);
+          errMsg = parsed.error || parsed.message;
+        } catch {
+          errMsg = text;
+        }
+        throw new Error(errMsg || `Server error (${res.status})`);
+      }
+
       const data = await res.json();
 
       if (data.error) {
@@ -188,7 +227,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         saveChats([...newHistory, replyMsg]);
       }
     } catch (e: any) {
-      setErrorText(language === 'ar' ? 'فشل تنسيق يومك الذكي.' : 'Failed to orchestrate schedule via AI.');
+      setErrorText(e.message || (language === 'ar' ? 'فشل تنسيق يومك الذكي.' : 'Failed to orchestrate schedule via AI.'));
     } finally {
       setIsLoading(false);
     }
