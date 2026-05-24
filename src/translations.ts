@@ -9,7 +9,7 @@ export const TRANSLATIONS = {
     clockTitle: "التوقيت اللحظي:",
     logout: "تسجيل الخروج",
     allMonths: "كل الشهور",
-    noTasks: "لا توجد مهام हालياً",
+    noTasks: "لا توجد مهام حالياً",
     achievementTrend: "منحنى الإنجاز (الـ 12 شهراً الماضية)",
     liveUpdate: "تحديث مباشر ⚡",
     noChartData: "لا توجد بيانات كافية لعرض الرسم البياني. أضف بعض المهام أولاً!",

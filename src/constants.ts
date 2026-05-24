@@ -19,6 +19,7 @@ export const CATEGORIES: Category[] = [
   { id: 'work', name: 'العمل', icon: 'Briefcase', color: 'emerald' },
   { id: 'study', name: 'الدراسة والتعليم', icon: 'BookOpen', color: 'blue' },
   { id: 'personal', name: 'الحياة الشخصية', icon: 'User', color: 'purple' },
+  { id: 'worship', name: 'العبادات', icon: 'Star', color: 'cyan' },
   { id: 'health', name: 'الصحة والرياضة', icon: 'Heart', color: 'rose' },
   { id: 'family', name: 'العائلة والمنزل', icon: 'Home', color: 'amber' },
   { id: 'shopping', name: 'التسوق والمشتريات', icon: 'ShoppingCart', color: 'indigo' },

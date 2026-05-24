@@ -481,6 +481,60 @@ export default function App() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
 
+        // -------------------------------------------------------------
+        // AUTOMATIC DAILY WORSHIP TASKS INJECTION
+        // -------------------------------------------------------------
+        const curDate = new Date();
+        const cDay = curDate.getDate();
+        const cMonth = curDate.getMonth() + 1;
+        const cYear = curDate.getFullYear();
+
+        const habits = [
+          { key: 'w', title: language === 'ar' ? 'الصلوات الخمس' : '5 Daily Prayers', category: 'worship', priority: 'high' as const },
+          { key: 'q', title: language === 'ar' ? 'ورد القرآن الكريم' : 'Daily Quran', category: 'worship', priority: 'medium' as const },
+          { key: 'a', title: language === 'ar' ? 'أذكار الصباح والمساء' : 'Morning & Evening Azkar', category: 'worship', priority: 'medium' as const }
+        ];
+
+        const missingHabits = habits.filter(h => {
+          return !uniqueTasks.some(t => t.day === cDay && t.month === cMonth && t.year === cYear && t.title === h.title);
+        });
+
+        if (missingHabits.length > 0) {
+          const newLocalTasks: Task[] = missingHabits.map(h => ({
+            id: `local-habit-${h.key}-${cDay}-${cMonth}-${cYear}-${Math.random().toString(36).substring(2,7)}`,
+            title: h.title,
+            description: language === 'ar' ? 'عبادة يومية مضافة تلقائياً' : 'Auto-added daily worship',
+            category: h.category,
+            priority: h.priority,
+            day: cDay,
+            month: cMonth,
+            year: cYear,
+            completed: false,
+            createdAt: new Date().toISOString()
+          }));
+
+          uniqueTasks.push(...newLocalTasks);
+          
+          if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
+             try {
+               const dbTasks = newLocalTasks.map(t => toDBTask(t, user.id));
+               let { error } = await supabase.from('tasks').insert(dbTasks);
+               if (error && (error.message.includes('position') || error.message.includes('Column not found'))) {
+                 localStorage.setItem('supabase_has_position_columns', 'false');
+                 const fallbackDbTasks = newLocalTasks.map(t => {
+                   const _t = toDBTask(t, user.id) as any;
+                   delete _t.position;
+                   return _t;
+                 });
+                 await supabase.from('tasks').insert(fallbackDbTasks);
+               }
+             } catch (err) {
+               console.error('Failed db habits sync', err);
+             }
+          }
+        }
+        // -------------------------------------------------------------
+
         setTasks(uniqueTasks);
         localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(uniqueTasks));
       }
