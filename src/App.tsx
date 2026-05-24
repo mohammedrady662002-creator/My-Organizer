@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Calendar, 
@@ -148,6 +148,52 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
   }
 ];
 
+function HeaderLiveClock({ language, label }: { language: 'ar' | 'en'; label: string }) {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]" id="live-header-clock">
+      <div className="flex items-center gap-1.5 text-emerald-300 text-[11px] font-bold">
+        <Clock size={12} />
+        <span>{label}</span>
+      </div>
+      <span className="text-sm font-black font-mono mt-0.5 text-white leading-none">
+        {time.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </span>
+    </div>
+  );
+}
+
+function HeaderGreeting({ language }: { language: 'ar' | 'en' }) {
+  const [hour, setHour] = useState(() => new Date().getHours());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHour(new Date().getHours());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (language === 'ar') {
+    if (hour >= 5 && hour < 12) return <>صباح الخير، استعد ليوم منظم ومثمر! ☀️</>;
+    if (hour >= 12 && hour < 17) return <>أهلاً بك، واصل تنظيم مهامك ومزامنتها! 🚀</>;
+    if (hour >= 17 && hour < 22) return <>مساء الخير، قيم إنجازك اليوم واستعد للغد! ✨</>;
+    return <>مرحباً، تنظيم المهام يمنحك بداية رائعة غداً! 🌙</>;
+  } else {
+    if (hour >= 5 && hour < 12) return <>Good morning! Prepare for an organized and productive day! ☀️</>;
+    if (hour >= 12 && hour < 17) return <>Welcome! Keep organizing and syncing your tasks! 🚀</>;
+    if (hour >= 17 && hour < 22) return <>Good evening! Evaluate your performance and prepare for tomorrow! ✨</>;
+    return <>Hello! Organizing your tasks grants you an excellent start tomorrow! 🌙</>;
+  }
+}
+
 export default function App() {
   // Language support state
   const [language, setLanguage] = useState<'ar' | 'en'>(() => {
@@ -232,7 +278,7 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Helper to check if a task is overdue relative to the simulated local clock
-  const checkIsOverdue = (task: Task): boolean => {
+  const checkIsOverdue = useCallback((task: Task): boolean => {
     if (task.completed) return false;
     
     const taskYear = task.year || 2026;
@@ -261,7 +307,7 @@ export default function App() {
     }
     
     return false;
-  };
+  }, [currentTime]);
 
   // Auth subscriber: Listen to Supabase session change
   useEffect(() => {
@@ -523,11 +569,11 @@ export default function App() {
     };
   }, [user]);
 
-  // Clock live interval tick
+  // Clock live interval tick (updated every 60 seconds for performance)
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(prev => new Date(prev.getTime() + 1000));
-    }, 1000);
+      setCurrentTime(new Date());
+    }, 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -1090,48 +1136,37 @@ export default function App() {
     setTimeout(() => setCopiedSql(false), 2000);
   };
 
-  // Filter calculations
-  const filteredTasks = tasks.filter(task => {
-    const matchesMonth = selectedMonth === 'all' || task.month === selectedMonth;
-    const matchesDay = selectedDay === 'all' || task.day === selectedDay;
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      (statusFilter === 'completed' && task.completed) || 
-      (statusFilter === 'pending' && !task.completed);
-    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
-    const matchesCategory = categoryFilter === 'all' || task.category === categoryFilter;
-    const matchesSearch = 
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Filter calculations memoized for high-performance and smoothness
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesMonth = selectedMonth === 'all' || task.month === selectedMonth;
+      const matchesDay = selectedDay === 'all' || task.day === selectedDay;
+      const matchesStatus = 
+        statusFilter === 'all' || 
+        (statusFilter === 'completed' && task.completed) || 
+        (statusFilter === 'pending' && !task.completed);
+      const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+      const matchesCategory = categoryFilter === 'all' || task.category === categoryFilter;
+      const matchesSearch = 
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesMonth && matchesDay && matchesStatus && matchesPriority && matchesCategory && matchesSearch;
-  });
+      return matchesMonth && matchesDay && matchesStatus && matchesPriority && matchesCategory && matchesSearch;
+    });
+  }, [tasks, selectedMonth, selectedDay, statusFilter, priorityFilter, categoryFilter, searchQuery]);
 
-  // Grouped by day
-  const tasksByDay: { [day: number]: Task[] } = {};
-  filteredTasks.forEach(task => {
-    if (!tasksByDay[task.day]) {
-      tasksByDay[task.day] = [];
-    }
-    tasksByDay[task.day].push(task);
-  });
-
-  const sortedDays = Object.keys(tasksByDay).map(Number).sort((a, b) => a - b);
-
-  const getDayGreeting = () => {
-    const hour = currentTime.getHours();
-    if (language === 'ar') {
-      if (hour >= 5 && hour < 12) return 'صباح الخير، استعد ليوم منظم ومثمر! ☀️';
-      if (hour >= 12 && hour < 17) return 'أهلاً بك، واصل تنظيم مهامك ومزامنتها! 🚀';
-      if (hour >= 17 && hour < 22) return 'مساء الخير، قيم إنجازك اليوم واستعد للغد! ✨';
-      return 'مرحباً، تنظيم المهام يمنحك بداية رائعة غداً! 🌙';
-    } else {
-      if (hour >= 5 && hour < 12) return 'Good morning! Prepare for an organized and productive day! ☀️';
-      if (hour >= 12 && hour < 17) return 'Welcome! Keep organizing and syncing your tasks! 🚀';
-      if (hour >= 17 && hour < 22) return 'Good evening! Evaluate your performance and prepare for tomorrow! ✨';
-      return 'Hello! Organizing your tasks grants you an excellent start tomorrow! 🌙';
-    }
-  };
+  // Grouped by day computed via memoization
+  const { tasksByDay, sortedDays } = useMemo(() => {
+    const group: { [day: number]: Task[] } = {};
+    filteredTasks.forEach(task => {
+      if (!group[task.day]) {
+        group[task.day] = [];
+      }
+      group[task.day].push(task);
+    });
+    const sorted = Object.keys(group).map(Number).sort((a, b) => a - b);
+    return { tasksByDay: group, sortedDays: sorted };
+  }, [filteredTasks]);
 
   const getSelectedMonthName = () => {
     if (selectedMonth === 'all') return language === 'ar' ? 'جميع الشهور' : 'All Months';
@@ -1492,7 +1527,7 @@ export default function App() {
               {t.title} <span className="text-emerald-400">{t.subtitle}</span>
             </h1>
             <p className="text-emerald-200/90 text-xs md:text-sm font-medium">
-              {getDayGreeting()}
+              <HeaderGreeting language={language} />
             </p>
           </div>
 
@@ -1519,15 +1554,7 @@ export default function App() {
             </button>
 
             {/* Live clock */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]">
-              <div className="flex items-center gap-1.5 text-emerald-300 text-[11px] font-bold">
-                <Clock size={12} />
-                <span>{t.clockTitle}</span>
-              </div>
-              <span className="text-sm font-black font-mono mt-0.5 text-white leading-none">
-                {currentTime.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            </div>
+            <HeaderLiveClock language={language} label={t.clockTitle} />
 
             {/* Profile Detail */}
             {user && (

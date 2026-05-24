@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { MONTHS } from '../constants';
 import { Task } from '../types';
 import { Calendar } from 'lucide-react';
@@ -13,18 +14,24 @@ interface MonthSelectorProps {
 export default function MonthSelector({ selectedMonth, onMonthChange, tasks, language = 'ar' }: MonthSelectorProps) {
   const t = TRANSLATIONS[language];
   
-  // Calculate analytics for each month
-  const getMonthStats = (monthVal: number) => {
-    const monthTasks = tasks.filter(t => t.month === monthVal);
-    const total = monthTasks.length;
-    const completed = monthTasks.filter(t => t.completed).length;
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, percentage };
-  };
+  // Calculate analytics for each month using useMemo
+  const monthStatsMap = useMemo(() => {
+    const stats: { [key: number]: { total: number; completed: number; percentage: number } } = {};
+    for (let m = 1; m <= 12; m++) {
+      const monthTasks = tasks.filter(t => t.month === m);
+      const total = monthTasks.length;
+      const completed = monthTasks.filter(t => t.completed).length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      stats[m] = { total, completed, percentage };
+    }
+    return stats;
+  }, [tasks]);
 
-  const totalTasksCount = tasks.length;
-  const completedTasksCount = tasks.filter(t => t.completed).length;
-  const totalPercentage = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+  const totalTasksCount = useMemo(() => tasks.length, [tasks]);
+  const completedTasksCount = useMemo(() => tasks.filter(t => t.completed).length, [tasks]);
+  const totalPercentage = useMemo(() => {
+    return totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+  }, [totalTasksCount, completedTasksCount]);
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm transition-all">
@@ -51,7 +58,7 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
       {/* Grid of Months */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-2 gap-2.5">
         {MONTHS.map((m) => {
-          const stats = getMonthStats(m.value);
+          const stats = monthStatsMap[m.value];
           const isSelected = selectedMonth === m.value;
           const localizedMonthName = language === 'ar' ? m.name : t.months_names[m.value - 1];
           

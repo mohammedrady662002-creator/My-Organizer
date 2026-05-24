@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { Task } from '../types';
 import { 
   ResponsiveContainer, 
@@ -25,48 +26,52 @@ export default function TrendChart({ tasks, language = 'ar' }: TrendChartProps) 
   const endYear = 2026;
   const endMonth = 5; // May
 
-  const chartData = [];
-  
-  // Arabic & English months abbreviation map
-  const MONTHS_MAP = language === 'ar' 
-    ? [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-      ]
-    : [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-
   const labelScheduled = language === 'ar' ? 'المهام المقررة' : 'Scheduled';
   const labelCompleted = language === 'ar' ? 'المهام المنجزة' : 'Completed';
   const labelRate = language === 'ar' ? 'نسبة الإنجاز (%)' : 'Completion Rate (%)';
 
-  for (let i = 11; i >= 0; i--) {
-    let m = endMonth - i;
-    let y = endYear;
-    
-    // adjust if month values are <= 0 representing the prior year
-    if (m <= 0) {
-      m += 12;
-      y -= 1;
+  // Arabic & English months abbreviation map
+  const MONTHS_MAP = useMemo(() => {
+    return language === 'ar' 
+      ? [
+          'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+          'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        ]
+      : [
+          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+  }, [language]);
+
+  const chartData = useMemo(() => {
+    const data = [];
+    for (let i = 11; i >= 0; i--) {
+      let m = endMonth - i;
+      let y = endYear;
+      
+      // adjust if month values are <= 0 representing the prior year
+      if (m <= 0) {
+        m += 12;
+        y -= 1;
+      }
+
+      // Filter tasks for this month and year
+      const monthTasks = tasks.filter(t => t.month === m && (t.year || 2026) === y);
+      const totalCount = monthTasks.length;
+      const completedCount = monthTasks.filter(t => t.completed).length;
+      
+      const rate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      const labelLabel = `${MONTHS_MAP[m - 1]} ${y.toString().slice(-2)}`;
+
+      data.push({
+        name: labelLabel,
+        [labelScheduled]: totalCount,
+        [labelCompleted]: completedCount,
+        [labelRate]: rate,
+      });
     }
-
-    // Filter tasks for this month and year
-    const monthTasks = tasks.filter(t => t.month === m && (t.year || 2026) === y);
-    const totalCount = monthTasks.length;
-    const completedCount = monthTasks.filter(t => t.completed).length;
-    
-    const rate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-    const labelLabel = `${MONTHS_MAP[m - 1]} ${y.toString().slice(-2)}`;
-
-    chartData.push({
-      name: labelLabel,
-      [labelScheduled]: totalCount,
-      [labelCompleted]: completedCount,
-      [labelRate]: rate,
-    });
-  }
+    return data;
+  }, [tasks, MONTHS_MAP, labelScheduled, labelCompleted, labelRate]);
 
   // Custom premium Tooltip using Tailwind for light/dark support
   const CustomTooltip = ({ active, payload, label }: any) => {
