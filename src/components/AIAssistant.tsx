@@ -47,8 +47,8 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
           id: 'g-1',
           role: 'assistant',
           text: language === 'ar' 
-            ? 'مرحباً بك! أنا مستشارك الشخصي للإنتاجية والذكاء الاصطناعي **سيرين AI (Serene AI)**. 🧠🌟\n\nكيف يمكنني مساعدتك اليوم؟ يمكنك:\n- كتابة أي سؤال للتنظيم الشخصي واستراتيجيات التركيز.\n- الضغط على **"تحليل الإنتاجية"** بالأسفل لقراءة المهام الحالية وإعطاء نصائح مخصصة.\n- الضغط على **"تخطيط وتوزيع يومي"** لاقتراح جدول زمني ذكي بناءً على قائمتك.'
-            : 'Welcome! I am **Serene AI**, your high-end productivity companion. 🧠🌟\n\nHow can I shape your schedule today? You can:\n- Ask for smart organization and focus strategies.\n- Click **"Analyze Productivity"** below to assess your current list.\n- Click **"Auto-Plan Daily Schedule"** to construct an hour-by-hour timeline.'
+            ? 'مرحباً بك! أنا مستشارك الشخصي للإنتاجية والذكاء الاصطناعي **راضي AI (Rady Ai)**. 🧠🌟\n\nكيف يمكنني مساعدتك اليوم؟ يمكنك:\n- كتابة أي سؤال للتنظيم الشخصي واستراتيجيات التركيز.\n- الضغط على **"تحليل الإنتاجية"** بالأسفل لقراءة المهام الحالية وإعطاء نصائح مخصصة.\n- الضغط على **"تخطيط وتوزيع يومي"** لاقتراح جدول زمني ذكي بناءً على قائمتك.'
+            : 'Welcome! I am **Rady Ai**, your high-end productivity companion. 🧠🌟\n\nHow can I shape your schedule today? You can:\n- Ask for smart organization and focus strategies.\n- Click **"Analyze Productivity"** below to assess your current list.\n- Click **"Auto-Plan Daily Schedule"** to construct an hour-by-hour timeline.'
         }
       ];
       setMessages(initial);
@@ -325,7 +325,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
               <Bot size={16} />
             </div>
             <div>
-              <h3 className="font-black text-sm text-slate-800 dark:text-white">{language === 'ar' ? 'المستشار الذكي سيرين AI' : 'Serene Assistant Hub'}</h3>
+              <h3 className="font-black text-sm text-slate-800 dark:text-white">{language === 'ar' ? 'المستشار الذكي راضي AI' : 'Rady Ai Assistant Hub'}</h3>
               <p className="text-[10px] text-emerald-500 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 <span>{language === 'ar' ? 'نشط ويقرأ بياناتك بأمان' : 'Interactive Gemini 3.5 Engine Active'}</span>
@@ -387,7 +387,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
               </div>
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1E293B]/60 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-[#94A3B8] text-xs flex items-center gap-2">
                 <Loader2 size={12} className="animate-spin text-[#6366F1]" />
-                <span>{language === 'ar' ? 'سيرين تراجع بياناتك وصياغة الحل الأمثل...' : 'Serene compiling response...'}</span>
+                <span>{language === 'ar' ? 'جاري صياغة الرد المناسب...' : 'Rady Ai is typing...'}</span>
               </div>
             </div>
           )}
@@ -405,7 +405,7 @@ export default function AIAssistant({ tasks, language }: AIAssistantProps) {
         <form onSubmit={handleSendMessage} className="bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-2xl p-2 flex items-center gap-2 shrink-0">
           <input
             type="text"
-            placeholder={language === 'ar' ? 'اسأل سيرين أي سؤال...' : 'Ask Serene coaching advice...'}
+            placeholder={language === 'ar' ? 'اسأل راضي أي سؤال...' : 'Ask Rady Ai coaching advice...'}
             value={inputMsg}
             onChange={(e) => setInputMsg(e.target.value)}
             disabled={isLoading}

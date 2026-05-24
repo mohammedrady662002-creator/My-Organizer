@@ -1608,7 +1608,7 @@ export default function App() {
                 {activeTab === 'habits' && (language === 'ar' ? 'مستكشف العادات الكولاجية 🌱' : 'Cognitive Habit Engine 🌱')}
                 {activeTab === 'pomodoro' && (language === 'ar' ? 'مساعد الفوكس والتركيز 🎯' : 'Attention Flow Engine 🎯')}
                 {activeTab === 'notes' && (language === 'ar' ? 'المفكرة الفكرية الذكية 🧠' : 'Cognitive Sandbox 🧠')}
-                {activeTab === 'ai_assistant' && (language === 'ar' ? 'استشاري الإنتاجية سيرين AI 🧠' : 'AI Strategic Assistant 🧠')}
+                {activeTab === 'ai_assistant' && (language === 'ar' ? 'استشاري الإنتاجية راضي AI 🧠' : 'AI Strategic Assistant 🧠')}
                 {activeTab === 'stats' && (language === 'ar' ? 'المقاييس البيانية والتقارير 📊' : 'Performance Diagnostics 📊')}
               </h2>
               <span className="text-[10px] text-[#64748B] mt-1 font-sans hidden sm:inline">

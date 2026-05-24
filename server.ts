@@ -183,19 +183,27 @@ app.post("/api/ai/chat", async (req, res) => {
     ? `تاريخ المحادثة السابقة:
 ${contextHistory}
 
-المستخدم يسأل:
+المستخدم يقول/يسأل:
 "${message}"
 
-يرجى الإجابة بلغة عربية فصحى وراقية وبتنسيق Markdown أنيق وواضح مع تقديم نصائح تنظيمية عملية ملهمة.`
+تعليمات الرد الهامة جداً:
+1. أجب بلغة عربية فصحى مبسطة، ودية، ومحترفة.
+2. إذا كان مدخل المستخدم مجرد تحية أو سؤال عن الحال (مثل: "عامل ايه"، "مرحبا"، "شلونك"، "السلام عليكم"، "أهلاً")، فقم بالرد القصير والودود والذكي في سطرين على الأكثر (مثال: "أهلاً بك! بخير والحمد لله، أنا راضي مستشارك لزيادة الإنتاجية وتقليل التوتر. كيف يمكنني مساعدتك اليوم؟")، ولا تضع قوائم عريضة أو نصائح تنظيمية مطولة إطلاقاً إلا إذا طلبها صراحة.
+3. تجنب الردود الطويلة والإنشائية، وركز على إجابة السؤال بدقة ووضوح واختصار.
+4. استخدم تنسيق Markdown بشكل أنيق وبسيط للعين.`
     : `Conversation history:
 ${contextHistory}
 
-User: "${message}"
+User says/asks:
+"${message}"
 
-Respond professionally as of a high-end personal life-hack and SaaS planner workspace assistant. Use friendly markdown.`;
+Important response guidelines:
+1. Respond professionally, warmly, and concisely.
+2. If the user input is a simple greeting or check-in like "how are you", "hello", "hi", respond with a very brief, friendly sentence (e.g., "Hello! I'm Rady Ai, your productivity and mindset co-pilot. How can I support you today?"), without adding huge lists or unsolicited guidelines.
+3. Keep answers precise, direct, and avoiding unnecessary verbosity or essays. Use simple markdown.`;
 
   try {
-    const r = await askGemini(prompt, "You are Serene AI, an elite SaaS ambient planner sidekick helping with stress-free life styling.");
+    const r = await askGemini(prompt, "You are Rady Ai, a friendly, professional, and supportive productivity and SaaS life coach assistant. You keep your responses concise, clear, and focused.");
     res.json({ result: r });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
