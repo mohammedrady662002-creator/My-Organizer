@@ -194,6 +194,15 @@ function HeaderGreeting({ language }: { language: 'ar' | 'en' }) {
   }
 }
 
+// Check if user is a real Supabase-authenticated user (with database UUID) or a local/simulated account
+export function isRealSupabaseUser(user: any): boolean {
+  if (!user) return false;
+  const id = String(user.id);
+  // Match standard UUID structure (8-4-4-4-12 hex characters)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 export default function App() {
   // Language support state
   const [language, setLanguage] = useState<'ar' | 'en'>(() => {
@@ -254,6 +263,7 @@ export default function App() {
   // Core application states
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [dbSyncError, setDbSyncError] = useState<string>('');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Drag and drop states
@@ -360,8 +370,9 @@ export default function App() {
 
   // Fetch and Subscribe Tasks lists
   const fetchTasks = async () => {
-    if (!isSupabaseConfigured || !supabase || !user || user.id === 'guest-session-1001') return;
+    if (!isSupabaseConfigured || !supabase || !user || !isRealSupabaseUser(user)) return;
     setTasksLoading(true);
+    setDbSyncError('');
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -370,25 +381,74 @@ export default function App() {
 
       if (error) {
         console.error('Database connection failed, possibly missing table tasks:', error.message);
-        // Fall back to local tasks in memory gracefully so app stays interactive
+        setDbSyncError(error.message);
         setTasksLoading(false);
         return;
       }
 
       if (data) {
-        const mapped = data.map(fromDBTask);
+        const dbTasks = data.map(fromDBTask);
+        
+        // Dynamic Smart Sync: Compare with localStorage to see if any local updates aren't pushed yet
+        const local = localStorage.getItem(`tasks_local_${user.id}`);
+        let finalTasks = [...dbTasks];
+
+        if (local) {
+          try {
+            const localTasks: Task[] = JSON.parse(local);
+            const dbTaskIds = new Set(dbTasks.map(t => t.id));
+            const unsyncedTasks = localTasks.filter(t => !dbTaskIds.has(t.id));
+
+            if (unsyncedTasks.length > 0) {
+              console.log(`Found ${unsyncedTasks.length} unsynced local tasks. Push syncing...`);
+              for (const task of unsyncedTasks) {
+                try {
+                  const { error: insErr } = await supabase
+                    .from('tasks')
+                    .insert(toDBTask(task, user.id));
+                  if (!insErr) {
+                    finalTasks.push(task);
+                  } else {
+                    console.error('Failed to auto-sync local task to cloud:', insErr.message);
+                    setDbSyncError(insErr.message);
+                    // Crucial: KEEP the task locally so it is NOT wiped out!
+                    finalTasks.push(task);
+                  }
+                } catch (e: any) {
+                  console.error(e);
+                  finalTasks.push(task);
+                }
+              }
+            }
+          } catch {
+            // parse error
+          }
+        }
+
+        // Remove any local duplicate ids just in case
+        const uniqueTasks: Task[] = [];
+        const seenIds = new Set<string>();
+        for (const t of finalTasks) {
+          if (!seenIds.has(t.id)) {
+            seenIds.add(t.id);
+            uniqueTasks.push(t);
+          }
+        }
+
         // Sort tasks locally by position ascending first, then by createdAt descending
-        mapped.sort((a, b) => {
+        uniqueTasks.sort((a, b) => {
           const posA = a.position !== undefined ? a.position : 0;
           const posB = b.position !== undefined ? b.position : 0;
           if (posA !== posB) return posA - posB;
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
-        setTasks(mapped);
-        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(mapped));
+
+        setTasks(uniqueTasks);
+        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(uniqueTasks));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setDbSyncError(e.message || String(e));
     } finally {
       setTasksLoading(false);
     }
@@ -501,7 +561,7 @@ export default function App() {
     setTasks(updatedTasksList);
 
     // Sync positions
-    if (isSupabaseConfigured && supabase && user && user.id !== 'guest-session-1001') {
+    if (isSupabaseConfigured && supabase && user && isRealSupabaseUser(user)) {
       try {
         const updates = updatedPositions.map(ut => {
           return supabase!
@@ -539,7 +599,7 @@ export default function App() {
       } catch {
         // ignore JSON syntax errors
       }
-    } else if (!isSupabaseConfigured || !supabase || user.id === 'guest-session-1001') {
+    } else if (!isSupabaseConfigured || !supabase || !isRealSupabaseUser(user)) {
       // Seed default template only if there is no localStorage and guest mode/offline
       const defaultSeeds = SEED_TASKS_TEMPLATE(user.id);
       const initializedSeeds = defaultSeeds.map((t, idx) => ({ ...t, position: idx }));
@@ -547,7 +607,7 @@ export default function App() {
       localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(initializedSeeds));
     }
 
-    if (!isSupabaseConfigured || !supabase || user.id === 'guest-session-1001') {
+    if (!isSupabaseConfigured || !supabase || !isRealSupabaseUser(user)) {
       return;
     }
 
@@ -999,7 +1059,7 @@ export default function App() {
       setTasks(updatedList);
       localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
-      if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
+      if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
         try {
           const { error } = await supabase
             .from('tasks')
@@ -1007,9 +1067,11 @@ export default function App() {
             .eq('id', editingTask.id);
           if (error) {
             console.error('Failed to sync edit to database:', error.message);
+            setDbSyncError(error.message);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error(e);
+          setDbSyncError(e.message || String(e));
         }
       }
       setEditingTask(null);
@@ -1045,16 +1107,18 @@ export default function App() {
       setTasks(updatedList);
       localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
-      if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
+      if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
         try {
           const { error } = await supabase
             .from('tasks')
             .insert(toDBTask(newItem, user.id));
           if (error) {
             console.error('Failed database sync on insert:', error.message);
+            setDbSyncError(error.message);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error(e);
+          setDbSyncError(e.message || String(e));
         }
       }
       setIsFormOpen(false);
@@ -1072,7 +1136,7 @@ export default function App() {
     setTasks(updatedList);
     localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
-    if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
+    if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
       try {
         const { error } = await supabase
           .from('tasks')
@@ -1091,7 +1155,7 @@ export default function App() {
     setTasks(updatedList);
     localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
 
-    if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
+    if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
       try {
         const { error } = await supabase
           .from('tasks')
@@ -1489,13 +1553,13 @@ export default function App() {
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isSupabaseConfigured && user?.id !== 'guest-session-1001'
+                isSupabaseConfigured && isRealSupabaseUser(user)
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
                   : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
               }`}>
-                {isSupabaseConfigured && user?.id !== 'guest-session-1001' ? <Database size={10} /> : <AlertCircle size={10} />}
+                {isSupabaseConfigured && isRealSupabaseUser(user) ? <Database size={10} /> : <AlertCircle size={10} />}
                 <span>
-                  {isSupabaseConfigured && user?.id !== 'guest-session-1001' ? t.supabaseActive : t.offlineMode}
+                  {isSupabaseConfigured && isRealSupabaseUser(user) ? t.supabaseActive : t.offlineMode}
                 </span>
               </span>
               
@@ -1626,6 +1690,61 @@ export default function App() {
       </AnimatePresence>
       {/* Main Container Dashboard Workspace */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-8">
+        
+        {/* Database Synchronization Warning banner if dbSyncError is present */}
+        <AnimatePresence>
+          {dbSyncError && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, scale: 0.95 }}
+              animate={{ height: "auto", opacity: 1, scale: 1 }}
+              exit={{ height: 0, opacity: 0, scale: 0.95 }}
+              className="mb-6 bg-amber-500/10 border border-amber-500/20 text-amber-300 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 overflow-hidden"
+            >
+              <div className="flex gap-3">
+                <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={20} />
+                <div className="space-y-1">
+                  <h4 className="font-bold text-sm text-amber-200">
+                    {language === 'ar' ? '⚠️ تنبيه: تعذر مزامنة بعض المهام مع قاعدة البيانات السحابية (Supabase)' : 'Database Sync issue alert'}
+                  </h4>
+                  <p className="text-xs text-amber-300 font-sans leading-relaxed">
+                    {language === 'ar' 
+                      ? `تم حفظ المهام وتعديلها محلياً بجهازك بأمان، ولكن واجه الاتصال بـ Supabase مشكلة: ${dbSyncError}`
+                      : `Changes are saved locally, but database returned: ${dbSyncError}`}
+                  </p>
+                  <p className="text-[10px] text-amber-400/80">
+                    {language === 'ar'
+                      ? 'تأكد من إضافة جدول المهام "tasks" وتفعيل سياسات الوصول (RLS) الموضحة في "دليل استضافة وقواعد بيانات العميل" بالأعلى.'
+                      : 'Please verify that the "tasks" table and Row Level Security (RLS) policies are correctly configured via the DB Setup guide.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                <button
+                  onClick={async () => {
+                    await fetchTasks();
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs border border-amber-500/30 transition-all cursor-pointer"
+                >
+                  {language === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry Sync 🔄'}
+                </button>
+                <button
+                  onClick={() => setIsHelpOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-bold text-xs border border-blue-500/30 transition-all cursor-pointer"
+                >
+                  {language === 'ar' ? 'عرض التعليمات 📖' : 'Show Guide 📖'}
+                </button>
+                <button
+                  onClick={() => setDbSyncError('')}
+                  className="p-1 px-2.5 rounded-xl text-amber-400 hover:bg-white/5 transition-all text-sm font-bold cursor-pointer"
+                  title="إخفاء التنبيه"
+                >
+                  ✕
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Right Sidebar on desktop / Top on mobile: Analytics, Month switch config */}
