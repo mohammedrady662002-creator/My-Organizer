@@ -314,12 +314,12 @@ export default function SmartNotes({ userId, language }: SmartNotesProps) {
                 <button
                   onClick={handleAiSummarize}
                   disabled={isAiLoading || !editContent.trim()}
-                  className="px-4 py-2 bg-indigo-50 dark:bg-gradient-to-r dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-100 dark:border-indigo-500/30 hover:border-[#6366F1] text-indigo-700 dark:text-[#c7d2fe] hover:text-indigo-900 dark:hover:text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 border border-transparent text-white rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:bg-slate-200 disabled:text-slate-500 disabled:border-slate-300 dark:disabled:bg-[#1E293B] dark:disabled:text-slate-500 dark:disabled:border-slate-700 disabled:cursor-not-allowed"
                 >
                   {isAiLoading ? (
-                    <Loader2 size={13} className="animate-spin text-[#6366F1]" />
+                    <Loader2 size={13} className="animate-spin text-white disabled:text-slate-500" />
                   ) : (
-                    <Sparkles size={13} className="text-purple-500 dark:text-purple-400" />
+                    <Sparkles size={13} className="text-white disabled:text-slate-500" />
                   )}
                   <span>{language === 'ar' ? 'تلخيص ذكي (AI)' : 'Summarize via AI'}</span>
                 </button>

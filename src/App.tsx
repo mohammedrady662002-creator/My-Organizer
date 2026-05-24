@@ -49,7 +49,6 @@ import { exportTasksToICS } from './utils/icsExport';
 import { TRANSLATIONS } from './translations';
 
 import SaaSSidebar from './components/SaaSSidebar';
-import HabitTracker from './components/HabitTracker';
 import PomodoroTimer from './components/PomodoroTimer';
 import SmartNotes from './components/SmartNotes';
 import AIAssistant from './components/AIAssistant';
@@ -1685,7 +1684,6 @@ export default function App() {
             <div className="flex flex-col">
               <h2 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-none">
                 {activeTab === 'dashboard' && (language === 'ar' ? 'لوحة تنظيم المهام ⏱️' : 'Task Planner Hub ⏱️')}
-                {activeTab === 'habits' && (language === 'ar' ? 'مستكشف العادات الكولاجية 🌱' : 'Cognitive Habit Engine 🌱')}
                 {activeTab === 'pomodoro' && (language === 'ar' ? 'مساعد الفوكس والتركيز 🎯' : 'Attention Flow Engine 🎯')}
                 {activeTab === 'notes' && (language === 'ar' ? 'المفكرة الفكرية الذكية 🧠' : 'Cognitive Sandbox 🧠')}
                 {activeTab === 'ai_assistant' && (language === 'ar' ? 'استشاري الإنتاجية راضي AI 🧠' : 'AI Strategic Assistant 🧠')}
@@ -1693,7 +1691,6 @@ export default function App() {
               </h2>
               <span className="text-[10px] text-[#64748B] mt-1 font-sans hidden sm:inline">
                 {activeTab === 'dashboard' && (language === 'ar' ? 'إدارة الخطط الزمنية وجداول الأعمال' : 'Configure milestones and timeline checkoffs')}
-                {activeTab === 'habits' && (language === 'ar' ? 'صياغة عادات ذكية وتتبع السلاسل الحركية المتكاملة' : 'Re-engineer behavioral patterns and track daily streak chains')}
                 {activeTab === 'pomodoro' && (language === 'ar' ? 'جلسات تركيز عميقة خالية من المشتتات مع مولد الذبذبات الصوتيّة' : 'Stave off distractions and listen to clean auditory focus loop loops')}
                 {activeTab === 'notes' && (language === 'ar' ? 'مساحة منظمة لتلخيص الأفكار ومذكراتك الحرة بفرشاة الذكاء الاصطناعي' : 'Dynamic canvas with server-side AI context summarization')}
                 {activeTab === 'ai_assistant' && (language === 'ar' ? 'حلول جدولة وتخطيط فوري لمهامك بالاستعانة بخبراء Gemini' : 'Orchestrated timelines and scheduling analysis on demand')}
@@ -2047,11 +2044,6 @@ export default function App() {
                   </div>
 
                 </div>
-              )}
-
-              {/* TAB 2: HABIT TRACKER */}
-              {activeTab === 'habits' && (
-                <HabitTracker userId={user.id} language={language} />
               )}
 
               {/* TAB 3: POMODORO TIMER WORKSPACE */}
