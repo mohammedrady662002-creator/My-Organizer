@@ -184,6 +184,8 @@ export default function App() {
   // Login / Signup forms states
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  const [authUsername, setAuthUsername] = useState('');
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [isSingupMode, setIsSignupMode] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authActionLoading, setAuthActionLoading] = useState(false);
@@ -551,7 +553,7 @@ export default function App() {
               setAuthActionLoading(false);
               return;
             }
-            const newUserObj = { id: 'local-' + Date.now(), email: authEmail, password: authPassword, full_name: authEmail.split('@')[0] };
+            const newUserObj = { id: 'local-' + Date.now(), email: authEmail, password: authPassword, full_name: authUsername || authEmail.split('@')[0] };
             existingUsers.push(newUserObj);
             localStorage.setItem(storedUsersKey, JSON.stringify(existingUsers));
             setAuthSuccessMsg(language === 'ar' ? 'تم إنشاء الحساب المحلي بنجاح! سجل الدخول الآن.' : 'Local account completed! Sign in now.');
@@ -581,7 +583,7 @@ export default function App() {
           password: authPassword,
           options: {
             data: {
-              full_name: authEmail.split('@')[0]
+              full_name: authUsername || authEmail.split('@')[0]
             },
             emailRedirectTo: 'https://myoganizer.mohammedrady662002.workers.dev/'
           }
@@ -618,6 +620,42 @@ export default function App() {
       }
     } catch (err: any) {
       setAuthError(err.message || (language === 'ar' ? 'فشلت هذه العملية، تأكد من التفاصيل المدخلة.' : 'Operation failed. Check details.'));
+    } finally {
+      setAuthActionLoading(false);
+    }
+  };
+
+  // Handler: Forgot Password Reset Email Request
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail.trim()) {
+      setAuthError(language === 'ar' ? 'يرجى إدخال البريد الإلكتروني للمتابعة!' : 'Please enter your email to proceed!');
+      return;
+    }
+    setAuthError('');
+    setAuthSuccessMsg('');
+    setAuthActionLoading(true);
+
+    if (!isSupabaseConfigured || !supabase) {
+      setTimeout(() => {
+        setAuthSuccessMsg(language === 'ar' 
+          ? 'تم إرسال رابط استعادة كلمة المرور (محاكاة) إلى بريدك الإلكتروني بنجاح.' 
+          : 'Password reset link (simulated) sent to your email successfully.');
+        setAuthActionLoading(false);
+      }, 800);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail.trim(), {
+        redirectTo: 'https://myoganizer.mohammedrady662002.workers.dev/'
+      });
+      if (error) throw error;
+      setAuthSuccessMsg(language === 'ar' 
+        ? 'تم إرسال رابط إعادة تعيين كلمة المرور بنجاح! يرجى مراجعة صندوق الرسائل ببريدك الإلكتروني.' 
+        : 'Password reset link sent successfully! Please check your email inbox.');
+    } catch (err: any) {
+      setAuthError(err.message || (language === 'ar' ? 'فشل في إرسال رابط إعادة تعيين كلمة المرور.' : 'Failed to send password reset link.'));
     } finally {
       setAuthActionLoading(false);
     }
@@ -1166,8 +1204,16 @@ export default function App() {
               <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
                 <Database size={28} />
               </div>
-              <h3 className="font-extrabold text-slate-800 dark:text-white text-lg">{t.loginTitle}</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500">{t.loginDesc}</p>
+              <h3 className="font-extrabold text-slate-800 dark:text-white text-lg">
+                {isForgotPasswordMode 
+                  ? (language === 'ar' ? 'استعادة كلمة المرور' : 'Reset Password') 
+                  : t.loginTitle}
+              </h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {isForgotPasswordMode 
+                  ? (language === 'ar' ? 'أدخل بريدك الإلكتروني لتلقي رابط استعادة الحساب' : 'Enter your email to receive a password reset link') 
+                  : t.loginDesc}
+              </p>
             </div>
 
             {authError && (
@@ -1184,70 +1230,148 @@ export default function App() {
               </div>
             )}
 
-            {/* Email Authentication Form */}
-            <form onSubmit={handleAuthAction} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
-                <input
-                  type="email"
-                  required
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                />
-              </div>
+            {isForgotPasswordMode ? (
+              /* Forgot Password Form */
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    {language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.passwordField}</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  placeholder="******"
-                  className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                />
-              </div>
+                <button
+                  type="submit"
+                  disabled={authActionLoading}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  {authActionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    language === 'ar' ? 'إرسال رابط استعادة كلمة المرور' : 'Send password reset link'
+                  )}
+                </button>
 
-              <button
-                type="submit"
-                disabled={authActionLoading}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                {authActionLoading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : isSingupMode ? (
-                  t.signUpBtn
-                ) : (
-                  t.signInBtn
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotPasswordMode(false);
+                      setAuthError('');
+                      setAuthSuccessMsg('');
+                    }}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
+                  >
+                    {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* Email Authentication Form (Sign In / Sign Up) */
+              <form onSubmit={handleAuthAction} className="space-y-4">
+                {isSingupMode && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                      {language === 'ar' ? 'اسم المستخدم' : 'Username'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={authUsername}
+                      onChange={(e) => setAuthUsername(e.target.value)}
+                      placeholder={language === 'ar' ? 'مثال: محمد' : 'e.g., Mohammed'}
+                      className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                    />
+                  </div>
                 )}
-              </button>
-            </form>
 
-            <div className="flex items-center justify-between text-xs pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignupMode(!isSingupMode);
-                  setAuthError('');
-                  setAuthSuccessMsg('');
-                }}
-                className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
-              >
-                {isSingupMode ? t.switchSignUp : t.switchSignIn}
-              </button>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                  />
+                </div>
 
-              <button
-                type="button"
-                onClick={handleContinueAsGuest}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>{t.continueAsGuest}</span>
-                <CornerDownLeft size={12} />
-              </button>
-            </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500">{t.passwordField}</label>
+                    {!isSingupMode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsForgotPasswordMode(true);
+                          setAuthError('');
+                          setAuthSuccessMsg('');
+                        }}
+                        className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 hover:underline cursor-pointer"
+                      >
+                        {language === 'ar' ? 'نسيت كلمة السر؟' : 'Forgot Password?'}
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="******"
+                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authActionLoading}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  {authActionLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : isSingupMode ? (
+                    t.signUpBtn
+                  ) : (
+                    t.signInBtn
+                  )}
+                </button>
+              </form>
+            )}
+
+            {!isForgotPasswordMode && (
+              <div className="flex items-center justify-between text-xs pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignupMode(!isSingupMode);
+                    setAuthError('');
+                    setAuthSuccessMsg('');
+                  }}
+                  className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
+                >
+                  {isSingupMode ? t.switchSignUp : t.switchSignIn}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleContinueAsGuest}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
+                >
+                  <span>{t.continueAsGuest}</span>
+                  <CornerDownLeft size={12} />
+                </button>
+              </div>
+            )}
           </div>
         </main>
 
