@@ -63,6 +63,7 @@ interface DBTask {
   time?: string;
   created_at: string;
   user_id: string;
+  position?: number;
 }
 
 function toDBTask(task: Task, userId: string): DBTask {
@@ -78,7 +79,8 @@ function toDBTask(task: Task, userId: string): DBTask {
     category: task.category,
     time: task.time,
     created_at: task.createdAt,
-    user_id: userId
+    user_id: userId,
+    position: task.position || 0
   };
 }
 
@@ -95,7 +97,8 @@ function fromDBTask(dbTask: DBTask): Task {
     category: dbTask.category,
     time: dbTask.time,
     createdAt: dbTask.created_at,
-    userId: dbTask.user_id
+    userId: dbTask.user_id,
+    position: dbTask.position || 0
   };
 }
 
@@ -112,7 +115,8 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     priority: 'high',
     category: 'work',
     createdAt: new Date().toISOString(),
-    userId
+    userId,
+    position: 0
   },
   {
     id: 'seed-task-2',
@@ -125,7 +129,8 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     priority: 'medium',
     category: 'health',
     createdAt: new Date().toISOString(),
-    userId
+    userId,
+    position: 1
   },
   {
     id: 'seed-task-3',
@@ -138,7 +143,8 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     priority: 'low',
     category: 'study',
     createdAt: new Date().toISOString(),
-    userId
+    userId,
+    position: 0
   }
 ];
 
@@ -190,10 +196,21 @@ export default function App() {
   const [otpSent, setOtpSent] = useState(false);
   const [tempSimulatedCode, setTempSimulatedCode] = useState('');
 
+  // Phone auth extra configuration states
+  const [phoneAuthSubTab, setPhoneAuthSubTab] = useState<'otp' | 'password'>('password');
+  const [phonePassword, setPhonePassword] = useState('');
+  const [isPhoneSignUp, setIsPhoneSignUp] = useState(false);
+  const [phoneOtpChannel, setPhoneOtpChannel] = useState<'sms' | 'whatsapp'>('sms');
+  const [showConfigGuide, setShowConfigGuide] = useState(false);
+
   // Core application states
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  // Drag and drop states
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   
   // Filtering states
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>(5); // default to May (5)
@@ -300,14 +317,143 @@ export default function App() {
 
       if (data) {
         const mapped = data.map(fromDBTask);
-        // Sort tasks locally by createdAt descending to maintain design order
-        mapped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        // Sort tasks locally by position ascending first, then by createdAt descending
+        mapped.sort((a, b) => {
+          const posA = a.position !== undefined ? a.position : 0;
+          const posB = b.position !== undefined ? b.position : 0;
+          if (posA !== posB) return posA - posB;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         setTasks(mapped);
       }
     } catch (e) {
       console.error(e);
     } finally {
       setTasksLoading(false);
+    }
+  };
+
+  // Drag and Drop action handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedTaskId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetTask: Task) => {
+    if (!draggedTaskId) return;
+    const dragItem = tasks.find(t => t.id === draggedTaskId);
+    if (!dragItem) return;
+
+    // Direct constraint: Only allowable within the exact same day, month, and year!
+    if (
+      dragItem.day === targetTask.day && 
+      dragItem.month === targetTask.month && 
+      dragItem.year === targetTask.year
+    ) {
+      e.preventDefault(); // Standard activation of dropping
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (!draggedTaskId) return;
+    const active = tasks.find(t => t.id === draggedTaskId);
+    const target = tasks.find(t => t.id === id);
+    if (active && target && active.day === target.day && active.month === target.month) {
+      setDragOverTaskId(id);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverTaskId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
+    setDragOverTaskId(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetTaskId: string) => {
+    e.preventDefault();
+    const activeId = draggedTaskId || e.dataTransfer.getData('text/plain');
+    setDraggedTaskId(null);
+    setDragOverTaskId(null);
+
+    if (!activeId || activeId === targetTaskId) return;
+
+    const draggedTask = tasks.find(t => t.id === activeId);
+    const targetTask = tasks.find(t => t.id === targetTaskId);
+    if (!draggedTask || !targetTask) return;
+
+    if (
+      draggedTask.day !== targetTask.day || 
+      draggedTask.month !== targetTask.month || 
+      draggedTask.year !== targetTask.year
+    ) {
+      return;
+    }
+
+    // Get all tasks currently inside this day, in sorted order
+    const dayTasks = tasks
+      .filter(t => t.day === draggedTask.day && t.month === draggedTask.month && t.year === draggedTask.year)
+      .sort((a, b) => {
+        const pA = a.position !== undefined ? a.position : 0;
+        const pB = b.position !== undefined ? b.position : 0;
+        if (pA !== pB) return pA - pB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+    const activeIdx = dayTasks.findIndex(t => t.id === activeId);
+    const targetIdx = dayTasks.findIndex(t => t.id === targetTaskId);
+    if (activeIdx === -1 || targetIdx === -1) return;
+
+    const reordered = [...dayTasks];
+    const [removedTask] = reordered.splice(activeIdx, 1);
+    reordered.splice(targetIdx, 0, removedTask);
+
+    // Apply absolute sequential position mapping
+    const updatedPositions = reordered.map((task, idx) => ({
+      ...task,
+      position: idx
+    }));
+
+    const posMap = new Map<string, number>();
+    updatedPositions.forEach(t => posMap.set(t.id, t.position!));
+
+    // Map these onto our loaded tasks state array
+    let updatedTasksList = tasks.map(t => {
+      if (posMap.has(t.id)) {
+        return { ...t, position: posMap.get(t.id) };
+      }
+      return t;
+    });
+
+    // Make sure we carry out the sort order consistently
+    updatedTasksList.sort((a, b) => {
+      const pA = a.position !== undefined ? a.position : 0;
+      const pB = b.position !== undefined ? b.position : 0;
+      if (pA !== pB) return pA - pB;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    setTasks(updatedTasksList);
+
+    // Sync positions
+    if (isSupabaseConfigured && supabase && user && user.id !== 'guest-session-1001') {
+      try {
+        const updates = updatedPositions.map(ut => {
+          return supabase!
+            .from('tasks')
+            .update({ position: ut.position })
+            .eq('id', ut.id);
+        });
+        await Promise.all(updates);
+      } catch (err) {
+        console.error('Failed to sync updated positions to Supabase:', err);
+      }
+    } else if (user) {
+      localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedTasksList));
     }
   };
 
@@ -322,15 +468,23 @@ export default function App() {
       const local = localStorage.getItem(`tasks_local_${user.id}`);
       if (local) {
         try {
-          setTasks(JSON.parse(local));
+          const loaded: Task[] = JSON.parse(local);
+          loaded.sort((a, b) => {
+            const posA = a.position !== undefined ? a.position : 0;
+            const posB = b.position !== undefined ? b.position : 0;
+            if (posA !== posB) return posA - posB;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          setTasks(loaded);
         } catch {
           setTasks([]);
         }
       } else {
         // Seed default template for instant wow experience
         const defaultSeeds = SEED_TASKS_TEMPLATE(user.id);
-        setTasks(defaultSeeds);
-        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(defaultSeeds));
+        const initializedSeeds = defaultSeeds.map((t, idx) => ({ ...t, position: idx }));
+        setTasks(initializedSeeds);
+        localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(initializedSeeds));
       }
       return;
     }
@@ -438,6 +592,96 @@ export default function App() {
     }
   };
 
+  // Phone + Password Sign-In / Sign-Up (وينشئ باس)
+  const handlePhonePasswordAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phoneNo.trim() || !phonePassword.trim()) return;
+    setAuthError('');
+    setAuthSuccessMsg('');
+    setAuthActionLoading(true);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        if (isPhoneSignUp) {
+          const { data, error } = await supabase.auth.signUp({
+            phone: phoneNo,
+            password: phonePassword,
+          });
+          if (error) throw error;
+          
+          setAuthSuccessMsg(language === 'ar' 
+            ? 'تم إنشاء الحساب بالرقم بنجاح! إذا كانت إعدادات التحقق نشطة في لوحة تحكم Supabase، فسيتم إرسال OTP لتأكيد الرقم، وإلا يمكنك تسجيل الدخول بالرقم وكلمة المرور مباشرةً.' 
+            : 'Phone account created successfully! If phone verification is enabled in your Supabase Auth, check your phone for OTP, otherwise you can sign in directly.');
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            phone: phoneNo,
+            password: phonePassword,
+          });
+          if (error) throw error;
+          if (data?.user) {
+            setUser(data.user);
+          }
+        }
+      } catch (err: any) {
+        console.error('Phone Password Auth Error:', err);
+        // Beautiful guided instruction if provider is not configured
+        if (err.message?.includes('provider is not enabled') || err.message?.includes('Unsupported provider')) {
+          setAuthError(language === 'ar'
+            ? 'فشلت العملية لأن خدمة تسجيل الدخول برقم الهاتف لم يتم تفعيلها بعد في لوحة تحكم مشروعك بـ Supabase (Auth -> Providers -> Phone). اتبع دليل المساعدة بالأسفل لتفعيلها بسهولة!'
+            : 'Operation failed: Phone Auth provider is not enabled in your Supabase project (Auth -> Providers -> Phone). See setup guide below to enable it!');
+          setShowConfigGuide(true);
+        } else {
+          setAuthError(err.message || (language === 'ar' ? 'حدث خطأ أثناء مصادقة الهاتف.' : 'An error occurred during phone authentication.'));
+        }
+      } finally {
+        setAuthActionLoading(false);
+      }
+    } else {
+      // Local Database simulation for Phone and Password (with custom user key)
+      setTimeout(() => {
+        try {
+          const storedUsersKey = 'organized_local_phone_users';
+          const existingUsersStr = localStorage.getItem(storedUsersKey) || '[]';
+          const existingUsers = JSON.parse(existingUsersStr);
+
+          if (isPhoneSignUp) {
+            const alreadyExists = existingUsers.some((u: any) => u.phone === phoneNo);
+            if (alreadyExists) {
+              setAuthError(language === 'ar' ? 'رقم الهاتف هذا مسجل بالفعل!' : 'This phone number is already registered!');
+              setAuthActionLoading(false);
+              return;
+            }
+            const newUserObj = { 
+              id: 'phone-local-' + Date.now(), 
+              phone: phoneNo, 
+              password: phonePassword 
+            };
+            existingUsers.push(newUserObj);
+            localStorage.setItem(storedUsersKey, JSON.stringify(existingUsers));
+            setAuthSuccessMsg(language === 'ar' ? 'تم إنشاء حساب الهاتف المحلي بنجاح وبأمان! سجل دخولك الآن بالرقم.' : 'Local phone account created successfully! Select Sign In to enter.');
+          } else {
+            const matchedUser = existingUsers.find((u: any) => u.phone === phoneNo && u.password === phonePassword);
+            if (matchedUser) {
+              const sessionUser = { 
+                id: matchedUser.id, 
+                email: `${phoneNo.replace('+', '')}@phone.local`, 
+                user_metadata: { full_name: phoneNo } 
+              };
+              setUser(sessionUser);
+              localStorage.setItem('organized_guest_mode', JSON.stringify(sessionUser));
+            } else {
+              setAuthError(language === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة.' : 'Incorrect phone number or password.');
+            }
+          }
+        } catch (err: any) {
+          setAuthError(err.message || 'Error occurred');
+        } finally {
+          setAuthActionLoading(false);
+        }
+      }, 800);
+    }
+  };
+
   // OTP phone authentication handler - Send Code
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -446,13 +690,53 @@ export default function App() {
     setAuthSuccessMsg('');
     setAuthActionLoading(true);
 
-    setTimeout(() => {
-      const simulatedDigits = Math.floor(100000 + Math.random() * 900000).toString();
-      setTempSimulatedCode(simulatedDigits);
-      setOtpSent(true);
-      setAuthActionLoading(false);
-      setAuthSuccessMsg(language === 'ar' ? 'تم إرسال رمز التحقق بنجاح إلى هاتفك!' : 'OTP code sent successfully to your phone!');
-    }, 1000);
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase.auth.signInWithOtp({
+          phone: phoneNo,
+          options: {
+            channel: phoneOtpChannel, // 'sms' or 'whatsapp' based on state!
+          }
+        });
+        if (error) throw error;
+        setOtpSent(true);
+        setAuthSuccessMsg(language === 'ar'
+          ? `تم إرسال رمز التحقق بنجاح إلى هاتفك عبر ${phoneOtpChannel === 'whatsapp' ? 'الواتساب (WhatsApp)' : 'الأرقام القصيرة (SMS)'}!`
+          : `OTP was dispatched successfully to your phone via ${phoneOtpChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}!`);
+      } catch (err: any) {
+        console.error('Phone OTP Send Error:', err);
+        // Intercept provider is not enabled
+        if (err.message?.includes('provider is not enabled') || err.message?.includes('Unsupported provider')) {
+          setAuthError(language === 'ar'
+            ? `فشل الإرسال لأن خدمة OTP عبر ${phoneOtpChannel === 'whatsapp' ? 'الواتساب' : 'الرسائل SMS'} ليست مفعلة في لوحة تحكم مشروعك بـ Supabase (أو تحتاج لربط مزود خدمة مثل Twilio أو MessageBird). قمنا بتفعيل وضع المحاكاة التلقائي بالأسفل لتجربة التطبيق!`
+            : `Failed: OTP via ${phoneOtpChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'} is not enabled in your Supabase project dashboard (requires configuring a text message adapter like Twilio). Fallback simulation is enabled below!`);
+          
+          // Fallback simulation inside active session if user wants
+          const simulatedDigits = Math.floor(100000 + Math.random() * 900000).toString();
+          setTempSimulatedCode(simulatedDigits);
+          setOtpSent(true);
+          setAuthSuccessMsg(language === 'ar'
+            ? `[تنبيه محاكاة] تم التحول لوضع المحاكاة التلقائي نظراً لعدم تفعيل مزود Supabase. الرمز هو: ${simulatedDigits}`
+            : `[Simulation Fallback] Auto-switched to simulation due to default provider configurations. Code is: ${simulatedDigits}`);
+          setShowConfigGuide(true);
+        } else {
+          setAuthError(err.message || 'Error occurred');
+        }
+      } finally {
+        setAuthActionLoading(false);
+      }
+    } else {
+      // Local simulation
+      setTimeout(() => {
+        const simulatedDigits = Math.floor(100000 + Math.random() * 900000).toString();
+        setTempSimulatedCode(simulatedDigits);
+        setOtpSent(true);
+        setAuthActionLoading(false);
+        setAuthSuccessMsg(language === 'ar' 
+          ? `[محاكاة] تم إرسال رمز التحقق بنجاح إلى هاتفك عبر ${phoneOtpChannel === 'whatsapp' ? 'الواتس آب 🟢' : 'الرسائل النصية SMS 📱'}!`
+          : `[Simulated] OTP code sent successfully to your phone via ${phoneOtpChannel === 'whatsapp' ? 'WhatsApp 🟢' : 'SMS 📱'}!`);
+      }, 1000);
+    }
   };
 
   // OTP phone authentication handler - Verify Code
@@ -462,21 +746,55 @@ export default function App() {
     setAuthSuccessMsg('');
     setAuthActionLoading(true);
 
-    setTimeout(() => {
-      if (otpCode.trim() === tempSimulatedCode) {
-        const phoneUser = {
-          id: 'phone-user-' + Date.now(),
-          email: `${phoneNo.replace('+', '')}@phone.local`,
-          user_metadata: { full_name: phoneNo }
-        };
-        setUser(phoneUser);
-        localStorage.setItem('organized_guest_mode', JSON.stringify(phoneUser));
-        setAuthActionLoading(false);
-      } else {
-        setAuthError(language === 'ar' ? 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى.' : 'OTP verification code is incorrect, please try again.');
+    if (isSupabaseConfigured && supabase) {
+      try {
+        // First try to check real OTP with Supabase
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone: phoneNo,
+          token: otpCode,
+          type: 'sms', // Note: SMS verify also handles verification in Supabase
+        });
+        
+        if (error) {
+          // If it fails but we simulated it due to provider is not enabled
+          if (tempSimulatedCode && otpCode.trim() === tempSimulatedCode) {
+            const phoneUser = {
+              id: 'phone-user-' + Date.now(),
+              email: `${phoneNo.replace('+', '')}@phone.local`,
+              user_metadata: { full_name: phoneNo }
+            };
+            setUser(phoneUser);
+            localStorage.setItem('organized_guest_mode', JSON.stringify(phoneUser));
+            setAuthSuccessMsg(language === 'ar' ? 'تم تسجيل الدخول المحاكى بنجاح!' : 'Simulated login completed successfully!');
+          } else {
+            throw error;
+          }
+        } else if (data?.user) {
+          setUser(data.user);
+        }
+      } catch (err: any) {
+        console.error('OTP Verification Error:', err);
+        setAuthError(err.message || (language === 'ar' ? 'تأكد من كتابة كود التحقق بشكل صحيح.' : 'Invalid verification code. Please check and retry.'));
+      } finally {
         setAuthActionLoading(false);
       }
-    }, 1000);
+    } else {
+      setTimeout(() => {
+        if (otpCode.trim() === tempSimulatedCode) {
+          const phoneUser = {
+            id: 'phone-user-' + Date.now(),
+            email: `${phoneNo.replace('+', '')}@phone.local`,
+            user_metadata: { full_name: phoneNo }
+          };
+          setUser(phoneUser);
+          localStorage.setItem('organized_guest_mode', JSON.stringify(phoneUser));
+          setAuthActionLoading(false);
+        } else {
+          setAuthError(language === 'ar' ? 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى.' : 'OTP verification code is incorrect, please try again.');
+          setAuthActionLoading(false);
+        }
+      }, 1000);
+    }
   };
 
   // Social Sign-In (Google / Facebook)
@@ -492,12 +810,26 @@ export default function App() {
             redirectTo: window.location.origin
           }
         });
-        if (error) throw error;
+        if (error) {
+          // Check if provider is not enabled
+          if (error.message?.includes('provider is not enabled') || error.message?.includes('Unsupported provider')) {
+            throw error;
+          }
+          throw error;
+        }
       } catch (err: any) {
-        setAuthError(err.message || `Failed to sign in via ${provider}`);
+        console.error(`${provider} OAuth Error:`, err);
+        if (err.message?.includes('provider is not enabled') || err.message?.includes('Unsupported provider')) {
+          setAuthError(language === 'ar'
+            ? `فشل تسجيل الدخول لأن حساب ${provider === 'google' ? 'Google' : 'Facebook'} لم يتم تفعيله وربطه بمشروعك في Supabase Dashboard بعد (Auth -> Providers). يمكنك اتباع الدليل الموجود أسفل النافذة لتفعيله بخطوات بسيطة!`
+            : `Failed: ${provider === 'google' ? 'Google' : 'Facebook'} provider is disabled in your Supabase project (Auth -> Providers). Follow our dynamic configuration guide below to enable it!`);
+          setShowConfigGuide(true);
+        } else {
+          setAuthError(err.message || `Failed to sign in via ${provider}`);
+        }
       }
     } else {
-      // Simulate OAuth successfully!
+      // Simulate OAuth successfully in local mode!
       setAuthActionLoading(true);
       setTimeout(() => {
         const dummyUser = {
@@ -572,6 +904,7 @@ export default function App() {
     } else {
       // Create new
       const generatedId = 'task-' + Date.now();
+      const dayTasksCount = tasks.filter(t => t.day === taskData.day && t.month === taskData.month).length;
       const newItem: Task = {
         id: generatedId,
         title: taskData.title,
@@ -584,7 +917,8 @@ export default function App() {
         category: taskData.category,
         time: taskData.time,
         userId: user.id,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        position: dayTasksCount
       };
 
       if (isSupabaseConfigured && supabase && user.id !== 'guest-session-1001') {
@@ -595,13 +929,28 @@ export default function App() {
           if (error) {
             console.error('Failed database sync on insert', error.message);
           }
-          setTasks(prev => [newItem, ...prev]);
+          setTasks(prev => {
+            const newList = [newItem, ...prev];
+            newList.sort((a, b) => {
+              const posA = a.position !== undefined ? a.position : 0;
+              const posB = b.position !== undefined ? b.position : 0;
+              if (posA !== posB) return posA - posB;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            return newList;
+          });
         } catch (e) {
           console.error(e);
         }
       } else {
         // offline save
         const updatedList = [newItem, ...tasks];
+        updatedList.sort((a, b) => {
+          const posA = a.position !== undefined ? a.position : 0;
+          const posB = b.position !== undefined ? b.position : 0;
+          if (posA !== posB) return posA - posB;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         setTasks(updatedList);
         localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
       }
@@ -804,218 +1153,69 @@ export default function App() {
               </div>
             )}
 
-            {/* Choosing login type */}
-            <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-950 p-1 rounded-xl border border-slate-100 dark:border-slate-850">
+            {/* Email Authentication Form */}
+            <form onSubmit={handleAuthAction} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
+                <input
+                  type="email"
+                  required
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.passwordField}</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="******"
+                  className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
+                />
+              </div>
+
               <button
-                type="button"
-                onClick={() => {
-                  setAuthTab('email');
-                  setAuthError('');
-                  setAuthSuccessMsg('');
-                }}
-                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  authTab === 'email'
-                    ? 'bg-white dark:bg-slate-850 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-800/80'
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                }`}
+                type="submit"
+                disabled={authActionLoading}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
               >
-                <LogIn size={13} />
-                <span>{language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthTab('phone');
-                  setAuthError('');
-                  setAuthSuccessMsg('');
-                }}
-                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  authTab === 'phone'
-                    ? 'bg-white dark:bg-slate-850 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-800/80'
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                }`}
-              >
-                <Smartphone size={13} />
-                <span>{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</span>
-              </button>
-            </div>
-
-            {authTab === 'email' ? (
-              <form onSubmit={handleAuthAction} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.emailField}</label>
-                  <input
-                    type="email"
-                    required
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.passwordField}</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="******"
-                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={authActionLoading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  {authActionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : isSingupMode ? (
-                    t.signUpBtn
-                  ) : (
-                    t.signInBtn
-                  )}
-                </button>
-              </form>
-            ) : (
-              // Phone authentication UI (OTP SMS Integration simulation)
-              <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.phoneField}</label>
-                  <input
-                    type="tel"
-                    required
-                    disabled={otpSent}
-                    value={phoneNo}
-                    onChange={(e) => setPhoneNo(e.target.value)}
-                    placeholder={t.phonePlaceholder}
-                    className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-sans font-medium"
-                    dir="ltr"
-                  />
-                </div>
-
-                {otpSent && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1.5">{t.otpCodeField}</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={6}
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value)}
-                        placeholder={t.otpCodePlaceholder}
-                        className="w-full pl-4 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-850 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-center tracking-widest font-sans font-bold"
-                      />
-                    </div>
-                    
-                    <div className="text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2.5 rounded-lg text-xs leading-relaxed font-semibold">
-                      {t.simulatedCodeNotice} <strong className="font-mono text-sm underline tracking-wide bg-amber-200/50 dark:bg-amber-850/50 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-400">{tempSimulatedCode}</strong>
-                    </div>
-                  </div>
+                {authActionLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : isSingupMode ? (
+                  t.signUpBtn
+                ) : (
+                  t.signInBtn
                 )}
+              </button>
+            </form>
 
-                <button
-                  type="submit"
-                  disabled={authActionLoading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                >
-                  {authActionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : otpSent ? (
-                    t.verifyAndLogin
-                  ) : (
-                    t.sendOtpCode
-                  )}
-                </button>
-              </form>
-            )}
+            <div className="flex items-center justify-between text-xs pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignupMode(!isSingupMode);
+                  setAuthError('');
+                  setAuthSuccessMsg('');
+                }}
+                className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
+              >
+                {isSingupMode ? t.switchSignUp : t.switchSignIn}
+              </button>
 
-            {/* Switch mode links */}
-            {authTab === 'email' && (
-              <div className="flex items-center justify-between text-xs pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignupMode(!isSingupMode);
-                    setAuthError('');
-                    setAuthSuccessMsg('');
-                  }}
-                  className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
-                >
-                  {isSingupMode ? t.switchSignUp : t.switchSignIn}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleContinueAsGuest}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
-                >
-                  <span>{t.continueAsGuest}</span>
-                  <CornerDownLeft size={12} />
-                </button>
-              </div>
-            )}
-
-            {authTab === 'phone' && (
-              <div className="flex items-center justify-between text-xs pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtpCode('');
-                    setPhoneNo('');
-                    setAuthError('');
-                    setAuthSuccessMsg('');
-                  }}
-                  className="text-emerald-600 hover:text-emerald-700 font-semibold cursor-pointer"
-                >
-                  {otpSent ? (language === 'ar' ? 'تغيير رقم الهاتف' : 'Change Phone Number') : ''}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleContinueAsGuest}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
-                >
-                  <span>{t.continueAsGuest}</span>
-                  <CornerDownLeft size={12} />
-                </button>
-              </div>
-            )}
-
-            {/* Social Logins */}
-            <div className="space-y-3 pt-2">
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-100 dark:border-slate-800" />
-                <span className="flex-shrink mx-4 text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-wide">
-                  {t.socialLogin}
-                </span>
-                <div className="flex-grow border-t border-slate-100 dark:border-slate-800" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => handleSocialSignIn('google')}
-                  className="py-2.5 px-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <Chrome size={13} className="text-red-500" />
-                  <span>Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialSignIn('facebook')}
-                  className="py-2.5 px-4 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <Facebook size={13} className="text-blue-600" />
-                  <span>Facebook</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleContinueAsGuest}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>{t.continueAsGuest}</span>
+                <CornerDownLeft size={12} />
+              </button>
             </div>
           </div>
         </main>
@@ -1494,7 +1694,7 @@ export default function App() {
                 sortedDays.map((day) => {
                   const dayTasks = tasksByDay[day];
                   return (
-                    <div key={day} className="space-y-2.5 animate-fade-in">
+                    <div key={day} className="space-y-2.5">
                       {/* Day Title Ribbon */}
                       <div className="flex items-center gap-2 px-1">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
@@ -1506,8 +1706,23 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Day Tasks List */}
-                      <div className="grid grid-cols-1 gap-3">
+                      {/* Day Tasks List with Staggered Animations */}
+                      <motion.div 
+                        key={`${day}-${selectedMonth}-${selectedDay}-${statusFilter}-${priorityFilter}-${categoryFilter}-${searchQuery.length > 0}`}
+                        variants={{
+                          hidden: { opacity: 0 },
+                          visible: {
+                            opacity: 1,
+                            transition: {
+                              staggerChildren: 0.07,
+                              delayChildren: 0.02
+                            }
+                          }
+                        }}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 gap-3"
+                      >
                         <AnimatePresence mode="popLayout">
                           {dayTasks.map((task) => (
                             <TaskItem
@@ -1517,10 +1732,20 @@ export default function App() {
                               onDelete={handleDeleteTask}
                               onEdit={handleEditTrigger}
                               isOverdue={checkIsOverdue(task)}
+                              language={language}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, task.id)}
+                              onDragOver={(e) => handleDragOver(e, task)}
+                              onDragEnter={(e) => handleDragEnter(e, task.id)}
+                              onDragLeave={handleDragLeave}
+                              onDragEnd={handleDragEnd}
+                              onDrop={(e) => handleDrop(e, task.id)}
+                              isDragging={draggedTaskId === task.id}
+                              isDragOver={dragOverTaskId === task.id}
                             />
                           ))}
                         </AnimatePresence>
-                      </div>
+                      </motion.div>
                     </div>
                   );
                 })

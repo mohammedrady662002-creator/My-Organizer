@@ -11,6 +11,7 @@ export interface Task {
   time?: string;      // "HH:MM" 24h format or empty
   createdAt: string;
   userId?: string;
+  position?: number;  // Sort order sequence within a day
 }
 
 export type TaskFilter = 'all' | 'today' | 'month' | 'completed' | 'pending';

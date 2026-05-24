@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
     category TEXT NOT NULL DEFAULT 'personal',
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    position INTEGER DEFAULT 0
 );
 
 -- 2. Enable Row Level Security (RLS)

@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'motion/react';
 import { 
   Briefcase, 
@@ -10,7 +11,8 @@ import {
   Trash2, 
   Check, 
   Calendar, 
-  AlertCircle 
+  AlertCircle,
+  GripVertical
 } from 'lucide-react';
 import { Task } from '../types';
 import { CATEGORIES } from '../constants';
@@ -24,6 +26,15 @@ interface TaskItemProps {
   onEdit: (task: Task) => void;
   isOverdue?: boolean;
   language?: 'ar' | 'en';
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragEnter?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
 }
 
 // Category Icon Helper with correct styling
@@ -40,7 +51,23 @@ function CategoryIcon({ name, className }: { name: string; className?: string })
   }
 }
 
-export default function TaskItem({ task, onToggle, onDelete, onEdit, isOverdue = false, language = 'ar' }: TaskItemProps) {
+export default function TaskItem({ 
+  task, 
+  onToggle, 
+  onDelete, 
+  onEdit, 
+  isOverdue = false, 
+  language = 'ar',
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDragEnter,
+  onDragLeave,
+  onDragEnd,
+  onDrop,
+  isDragging = false,
+  isDragOver = false
+}: TaskItemProps) {
   const category = CATEGORIES.find(c => c.id === task.category) || CATEGORIES[2]; // fallback to personal
   const t = TRANSLATIONS[language];
 
@@ -107,20 +134,49 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, isOverdue =
   const catTheme = getCategoryTheme(category.color);
   const localizedCatName = (t.cats_names as any)[category.id] || category.name;
 
+  // Set up staggered framer motion item variants
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15, scale: 0.98 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 110,
+        damping: 15
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.95, 
+      y: -10, 
+      transition: { duration: 0.15 } 
+    }
+  };
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      variants={itemVariants}
       whileHover={{ y: -2 }}
-      transition={{ duration: 0.2 }}
-      className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
-        task.completed 
-          ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
-          : isOverdue
-            ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50'
-            : 'border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900'
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
+      className={`group relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+        isDragging
+          ? 'opacity-40 border-dashed border-emerald-400 dark:border-emerald-600 bg-slate-100/50 dark:bg-slate-950/20 shadow-none cursor-grabbing'
+          : isDragOver
+            ? 'scale-[1.01] ring-2 ring-emerald-400 dark:ring-emerald-500 border-emerald-400 dark:border-emerald-500 shadow-lg cursor-grabbing'
+            : task.completed 
+              ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
+              : isOverdue
+                ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50'
+                : 'border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900'
       }`}
       id={`task-item-${task.id}`}
     >
@@ -135,7 +191,15 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, isOverdue =
       )}
 
       {/* Main task content */}
-      <div className="flex items-start gap-3.5 w-full md:w-3/4">
+      <div className="flex items-start gap-2.5 w-full md:w-3/4">
+        {/* Grip Handler for dragging context */}
+        <div 
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400 p-1.5 transition-colors self-start mt-0.5"
+          title={language === 'ar' ? 'اسحب لإعادة الترتيب' : 'Drag to reorder'}
+        >
+          <GripVertical size={16} />
+        </div>
+
         {/* Custom Circular Checkbox Button */}
         <button
           onClick={() => onToggle(task.id)}
