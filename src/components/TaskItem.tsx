@@ -242,29 +242,51 @@ export default function TaskItem({
           </div>
 
         {/* Custom Circular Checkbox Button */}
-        <motion.button
-          whileHover={{ scale: 1.12, borderColor: '#10b981' }}
-          whileTap={{ scale: 0.88 }}
-          onClick={() => onToggle(task.id)}
-          className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer mt-1 ${
-            task.completed
-              ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20'
-              : isOverdue
-                ? 'border-rose-300 dark:border-rose-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20'
-                : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50/30'
-          }`}
-          id={`toggle-btn-${task.id}`}
-        >
+        <div className="relative">
+          <motion.button
+            whileHover={{ scale: 1.12, borderColor: '#10b981' }}
+            whileTap={{ scale: 0.88 }}
+            onClick={() => onToggle(task.id)}
+            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer mt-1 ${
+              task.completed
+                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20'
+                : isOverdue
+                  ? 'border-rose-300 dark:border-rose-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20'
+                  : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50/30'
+            }`}
+            id={`toggle-btn-${task.id}`}
+          >
+            {task.completed && (
+              <motion.div
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+              >
+                <Check size={14} strokeWidth={3} className="text-white" />
+              </motion.div>
+            )}
+          </motion.button>
+          
+          {/* Sparkle explosion on completion */}
           {task.completed && (
-            <motion.div
-              initial={{ scale: 0, rotate: -45 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-            >
-              <Check size={14} strokeWidth={3} className="text-white" />
-            </motion.div>
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              {[...Array(4)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                  animate={{
+                    opacity: 0,
+                    scale: 1.5,
+                    x: Math.cos((i * Math.PI) / 2 + Math.PI / 4) * 24,
+                    y: Math.sin((i * Math.PI) / 2 + Math.PI / 4) * 24,
+                  }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400"
+                />
+              ))}
+            </div>
           )}
-        </motion.button>
+        </div>
  
          {/* Text info and details */}
          <div className="flex-1 min-w-0">

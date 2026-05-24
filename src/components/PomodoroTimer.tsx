@@ -112,16 +112,27 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
         osc.start();
         osc.stop(ctx.currentTime + 0.22);
       } else if (type === 'complete') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
-        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24); // G5
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.55);
+        const playRing = (delay: number) => {
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.type = 'square';
+          osc1.frequency.setValueAtTime(800, ctx.currentTime + delay);
+          gain1.gain.setValueAtTime(0.08, ctx.currentTime + delay);
+          gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.start(ctx.currentTime + delay);
+          osc1.stop(ctx.currentTime + delay + 0.2);
+        };
+        // Play an alarm repeating pattern (4 beeps)
+        playRing(0);
+        playRing(0.2);
+        playRing(0.4);
+        playRing(0.6);
+        playRing(1.0);
+        playRing(1.2);
+        playRing(1.4);
+        playRing(1.6);
       }
     } catch (e) {
       // safe fallback

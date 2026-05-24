@@ -434,38 +434,17 @@ export default function App() {
         if (local) {
           try {
             const localTasks: Task[] = JSON.parse(local);
-            const dbTaskIds = new Set(dbTasks.map(t => t.id));
-            const unsyncedTasks = localTasks.filter(t => !dbTaskIds.has(t.id));
-
-            if (unsyncedTasks.length > 0) {
-              console.log(`Found ${unsyncedTasks.length} unsynced local tasks. Push syncing...`);
-              for (const task of unsyncedTasks) {
-                try {
-                  let { error: insErr } = await supabase
-                    .from('tasks')
-                    .insert(toDBTask(task, user.id));
-                  
-                  if (insErr && (insErr.message.includes('position') || insErr.message.includes('Column not found') || insErr.message.includes('Could not find'))) {
-                    console.log('Position column missing in Supabase. Enforcing self-healing fallback dynamic insert...');
-                    localStorage.setItem('supabase_has_position_columns', 'false');
-                    const healedRes = await supabase
-                      .from('tasks')
-                      .insert(toDBTask(task, user.id));
-                    insErr = healedRes.error;
-                  }
-
-                  if (!insErr) {
-                    finalTasks.push(task);
-                  } else {
-                    console.error('Failed to auto-sync local task to cloud:', insErr.message);
-                    setDbSyncError(insErr.message);
-                    // Crucial: KEEP the task locally so it is NOT wiped out!
-                    finalTasks.push(task);
-                  }
-                } catch (e: any) {
-                  console.error(e);
-                  finalTasks.push(task);
+            // By default, do not aggressively push all missing tasks (doing so resurrects deleted tasks).
+            // Only use local tasks if the database is literally empty and we have data (first sync).
+            if (dbTasks.length === 0 && localTasks.length > 0) {
+              const hasSeeded = localStorage.getItem(`seeded_to_db_${user.id}`);
+              if (!hasSeeded) {
+                console.log('Database empty but local tasks found. Push syncing initial batch...');
+                for (const task of localTasks) {
+                  await supabase.from('tasks').upsert(toDBTask(task, user.id));
                 }
+                localStorage.setItem(`seeded_to_db_${user.id}`, 'true');
+                finalTasks = [...localTasks];
               }
             }
           } catch {
@@ -735,7 +714,7 @@ export default function App() {
       localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedTasks));
       
       if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
-         Promise.all(newTasks.map(t => supabase.from('tasks').insert(toDBTask(t, user.id)))).catch(err => console.error(err));
+         Promise.all(newTasks.map(t => supabase.from('tasks').upsert(toDBTask(t, user.id)))).catch(err => console.error(err));
       }
     }
 
@@ -1233,13 +1212,13 @@ export default function App() {
         try {
           let { error } = await supabase
             .from('tasks')
-            .insert(toDBTask(newItem, user.id));
+            .upsert(toDBTask(newItem, user.id));
           
           if (error && (error.message.includes('position') || error.message.includes('Column not found') || error.message.includes('Could not find'))) {
             localStorage.setItem('supabase_has_position_columns', 'false');
             const healedRes = await supabase
               .from('tasks')
-              .insert(toDBTask(newItem, user.id));
+              .upsert(toDBTask(newItem, user.id));
             error = healedRes.error;
           }
 
@@ -1283,9 +1262,12 @@ export default function App() {
   // Handler: Task delete
   const handleDeleteTask = async (id: string) => {
     if (!window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه المهمة؟' : 'Are you sure you want to delete this task?')) return;
+    
+    // Optimistic local delete
+    const previousTasks = [...tasks];
     const updatedList = tasks.filter(t => t.id !== id);
     setTasks(updatedList);
-    localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(updatedList));
+    localStorage.setItem(`tasks_local_${user?.id || 'guest'}`, JSON.stringify(updatedList));
 
     if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
       try {
@@ -1293,7 +1275,17 @@ export default function App() {
           .from('tasks')
           .delete()
           .eq('id', id);
-        if (error) console.error('Error deleting task from database:', error.message);
+          
+        if (error) {
+          console.error('Error deleting task from database:', error.message);
+          window.alert(language === 'ar' 
+            ? 'تعذر حذف المهمة من قاعدة البيانات، يرجى التحقق من الصلاحيات (RLS).' 
+            : 'Failed to delete task from the database. Please check RLS policies.');
+          // Revert local state because the DB failed to delete it
+          setTasks(previousTasks);
+          localStorage.setItem(`tasks_local_${user.id}`, JSON.stringify(previousTasks));
+          return;
+        }
       } catch (err) {
         console.error(err);
       }

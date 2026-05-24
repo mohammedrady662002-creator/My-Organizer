@@ -15,14 +15,15 @@ import {
   Heart,
   Home,
   ShoppingCart,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
 import { Task, Category } from '../types';
 import { MONTHS, CATEGORIES } from '../constants';
 import { TRANSLATIONS } from '../translations';
 
 interface TaskFormProps {
-  onSubmit: (taskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => void;
+  onSubmit: (taskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => Promise<void> | void;
   editingTask: Task | null;
   onCancelEdit: () => void;
   defaultMonth?: number;
@@ -52,6 +53,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
   const [priority, setPriority] = useState<Task['priority']>('medium');
   const [category, setCategory] = useState<string>('personal');
   const [time, setTime] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   
   // validation error
   const [error, setError] = useState('');
@@ -92,7 +94,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -109,19 +111,26 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
       return;
     }
 
-    onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      day,
-      month,
-      year: new Date().getFullYear(), // Default calendar year
-      priority,
-      category,
-      time: time || undefined
-    });
-
-    if (!editingTask) {
-      resetForm();
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        title: title.trim(),
+        description: description.trim(),
+        day,
+        month,
+        year: new Date().getFullYear(), // Default calendar year
+        priority,
+        category,
+        time: time || undefined
+      });
+      if (!editingTask) {
+        resetForm();
+      }
+    } catch (err) {
+      console.error(err);
+      setError('An error occurred while saving.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -355,10 +364,16 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
             whileHover={{ scale: 1.03, boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.25)' }}
             whileTap={{ scale: 0.97 }}
             type="submit"
-            className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+            disabled={isSaving}
+            className="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             id="task-form-submit-btn"
           >
-            {editingTask ? (
+            {isSaving ? (
+               <>
+                 <Loader2 size={16} className="animate-spin" />
+                 <span className="text-xs">{language === 'ar' ? 'جاري الحفظ...' : 'Saving...'}</span>
+               </>
+            ) : editingTask ? (
               <>
                 <Save size={16} />
                 <span>{t.saveChange}</span>
