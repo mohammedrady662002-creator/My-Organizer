@@ -1034,37 +1034,7 @@ export default function App() {
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       
-      {/* Top Banner Warning for Local Offline Fallback Mode in Workspace */}
-      {!isSupabaseConfigured && (
-        <div className="bg-amber-500 text-white py-3 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-bold border-b border-amber-600/20 shadow-sm">
-          <div className="flex items-center gap-2">
-            <AlertCircle size={15} className="animate-bounce" />
-            <span>
-              {language === 'ar' 
-                ? 'تنبيه: تطبيقك الآن قيد تشغيل "الوضع المحلي الموفر" (كل شيء محفوظ بمتصفحك).' 
-                : 'Notice: Your application is currently running in "Local Offline Mode" (data is stored in your browser).'
-              }
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <p className="text-[11px] font-normal leading-relaxed text-amber-50 max-w-md hidden md:block">
-              {language === 'ar'
-                ? 'لتفعيل السحابة الفورية الآمنة، انقل التطبيق ومفاتيح سوبابيس (Supabase) إلى إعدادات الأسرار.'
-                : 'To activate secure live cloud sync, save your Supabase keys under your project settings.'
-              }
-            </p>
-            <button
-              onClick={() => setIsSqlPanelOpen(!isSqlPanelOpen)}
-              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg border border-white/20 flex items-center gap-1 cursor-pointer transition-all"
-            >
-              <Terminal size={12} />
-              <span>
-                {language === 'ar' ? 'مشاهدة كود SQL للجدول 💾' : 'View SQL Table Code 💾'}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Database Schema Setup Instruction Modal or Card if trigger is clicked */}
       <AnimatePresence>
