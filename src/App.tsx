@@ -108,9 +108,9 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     id: 'seed-task-1',
     title: 'تنظيم الميزانية الشهرية وتنسيق المصروفات',
     description: 'مراجعة الدخل والمصروفات ووضع ميزانية تفصيلية لدعم الإدخار',
-    day: 24,
-    month: 5,
-    year: 2026,
+    day: new Date().getDate(),
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
     completed: true,
     priority: 'high',
     category: 'work',
@@ -122,9 +122,9 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     id: 'seed-task-2',
     title: 'مشي سريع لمدة نصف ساعة في الهواء الطلق',
     description: 'الحفاظ على اللياقة البدنية وتصفية الذهن، يفضل وقت الغروب',
-    day: 24,
-    month: 5,
-    year: 2026,
+    day: new Date().getDate(),
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
     completed: false,
     priority: 'medium',
     category: 'health',
@@ -136,9 +136,9 @@ const SEED_TASKS_TEMPLATE = (userId: string): Task[] => [
     id: 'seed-task-3',
     title: 'استكمال قراءة الفصل الرابع من كتاب التطوير الذاتي',
     description: 'تلخيص النقاط الأساسية حول بناء العادات الإيجابية الصغيرة وتدوينها',
-    day: 25,
-    month: 5,
-    year: 2026,
+    day: new Date().getDate() === 28 || new Date().getDate() === 29 || new Date().getDate() === 30 || new Date().getDate() === 31 ? new Date().getDate() : new Date().getDate() + 1,
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
     completed: false,
     priority: 'low',
     category: 'study',
@@ -213,7 +213,7 @@ export default function App() {
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   
   // Filtering states
-  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>(5); // default to May (5)
+  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>(new Date().getMonth() + 1); // default to current month
   const [selectedDay, setSelectedDay] = useState<number | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -227,7 +227,7 @@ export default function App() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // Time metrics state
-  const [currentTime, setCurrentTime] = useState(new Date('2026-05-24T02:00:00Z'));
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Helper to check if a task is overdue relative to the simulated local clock
   const checkIsOverdue = (task: Task): boolean => {
@@ -583,7 +583,7 @@ export default function App() {
             data: {
               full_name: authEmail.split('@')[0]
             },
-            emailRedirectTo: window.location.origin // Redirect to current Cloud Run deployment instead of localhost
+            emailRedirectTo: 'https://myoganizer.mohammedrady662002.workers.dev/'
           }
         });
         if (error) throw error;
@@ -942,7 +942,7 @@ export default function App() {
         description: taskData.description || '',
         day: taskData.day,
         month: taskData.month,
-        year: 2026,
+        year: new Date().getFullYear(),
         completed: false,
         priority: taskData.priority,
         category: taskData.category,
@@ -1606,8 +1606,8 @@ export default function App() {
                         setEditingTask(null);
                         setIsFormOpen(false);
                       }}
-                      defaultMonth={selectedMonth === 'all' ? 5 : selectedMonth}
-                      defaultDay={selectedDay === 'all' ? 24 : selectedDay}
+                      defaultMonth={selectedMonth === 'all' ? (new Date().getMonth() + 1) : selectedMonth}
+                      defaultDay={selectedDay === 'all' ? new Date().getDate() : selectedDay}
                     />
                   </motion.div>
                 )}

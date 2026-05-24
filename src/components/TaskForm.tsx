@@ -44,7 +44,7 @@ function CategoryIcon({ name, className }: { name: string; className?: string })
   }
 }
 
-export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultMonth = 5, defaultDay = 23, language = 'ar' }: TaskFormProps) {
+export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultMonth = new Date().getMonth() + 1, defaultDay = new Date().getDate(), language = 'ar' }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [month, setMonth] = useState<number>(defaultMonth);
@@ -114,7 +114,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
       description: description.trim(),
       day,
       month,
-      year: 2026, // Default calendar year
+      year: new Date().getFullYear(), // Default calendar year
       priority,
       category,
       time: time || undefined
