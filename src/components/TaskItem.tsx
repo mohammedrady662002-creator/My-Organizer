@@ -135,7 +135,7 @@ export default function TaskItem({
   const localizedCatName = (t.cats_names as any)[category.id] || category.name;
 
   // Set up staggered framer motion item variants
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 15, scale: 0.98 },
     visible: { 
       opacity: 1, 
@@ -214,7 +214,7 @@ export default function TaskItem({
                 ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
                 : isOverdue
                   ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-250 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50 hover:border-rose-400'
-                  : 'border-slate-120 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/40'
+                  : 'border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500/40'
         }`}
         id={`task-item-${task.id}`}
       >
@@ -265,20 +265,30 @@ export default function TaskItem({
             </motion.div>
           )}
         </motion.button>
-
-        {/* Text info and details */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            {/* Task Title */}
-            <h4
-              onClick={() => onToggle(task.id)}
-              className={`font-semibold text-slate-800 dark:text-slate-100 cursor-pointer text-[15px] leading-tight break-words select-none transition-all ${
-                task.completed ? 'line-through text-slate-400 dark:text-slate-500 font-normal' : ''
-              } ${isOverdue ? 'text-rose-950 dark:text-rose-200' : ''}`}
-            >
-              {task.title}
-            </h4>
-          </div>
+ 
+         {/* Text info and details */}
+         <div className="flex-1 min-w-0">
+           <div className="flex flex-wrap items-center gap-2 mb-1.5">
+             {/* Task Title */}
+             <div className="relative inline-block max-w-full">
+               <h4
+                 onClick={() => onToggle(task.id)}
+                 className={`font-semibold text-slate-800 dark:text-slate-100 cursor-pointer text-[15px] leading-tight break-words select-none transition-all ${
+                   task.completed ? 'text-slate-400/80 dark:text-slate-500 font-normal' : ''
+                 } ${isOverdue ? 'text-rose-950 dark:text-rose-200' : ''}`}
+               >
+                 {task.title}
+               </h4>
+               {task.completed && (
+                 <motion.span
+                   initial={{ width: 0 }}
+                   animate={{ width: '100%' }}
+                   transition={{ type: 'tween', duration: 0.35, ease: 'easeOut' }}
+                   className="absolute left-0 right-0 top-[55%] h-[2px] bg-slate-400 dark:bg-slate-500 rounded-full"
+                 />
+               )}
+             </div>
+           </div>
 
           {/* Description if exists */}
           {task.description && (

@@ -35,7 +35,8 @@ import {
   Globe,
   Smartphone,
   Facebook,
-  Chrome
+  Chrome,
+  Loader
 } from 'lucide-react';
 import { Task } from './types';
 import { MONTHS, CATEGORIES } from './constants';
@@ -46,6 +47,13 @@ import StatsCard from './components/StatsCard';
 import TrendChart from './components/TrendChart';
 import { exportTasksToICS } from './utils/icsExport';
 import { TRANSLATIONS } from './translations';
+
+import SaaSSidebar from './components/SaaSSidebar';
+import HabitTracker from './components/HabitTracker';
+import PomodoroTimer from './components/PomodoroTimer';
+import SmartNotes from './components/SmartNotes';
+import AIAssistant from './components/AIAssistant';
+import SaaSStats from './components/SaaSStats';
 
 import { supabase, isSupabaseConfigured, SUPABASE_SETUP_SQL } from './supabase';
 
@@ -66,8 +74,9 @@ interface DBTask {
   position?: number;
 }
 
-function toDBTask(task: Task, userId: string): DBTask {
-  return {
+function toDBTask(task: Task, userId: string): any {
+  const hasPosition = localStorage.getItem('supabase_has_position_columns') !== 'false';
+  const item: any = {
     id: task.id,
     title: task.title,
     description: task.description || '',
@@ -77,11 +86,19 @@ function toDBTask(task: Task, userId: string): DBTask {
     completed: task.completed,
     priority: task.priority,
     category: task.category,
-    time: task.time,
     created_at: task.createdAt,
-    user_id: userId,
-    position: task.position || 0
+    user_id: userId
   };
+  
+  if (task.time) {
+    item.time = task.time;
+  }
+  
+  if (hasPosition) {
+    item.position = task.position || 0;
+  }
+  
+  return item;
 }
 
 function fromDBTask(dbTask: DBTask): Task {
@@ -260,6 +277,15 @@ export default function App() {
   const [phoneOtpChannel, setPhoneOtpChannel] = useState<'sms' | 'whatsapp'>('sms');
   const [showConfigGuide, setShowConfigGuide] = useState(false);
 
+  // SaaS layout toggling states
+  const [activeTab, setActiveTab] = useState<string>(() => localStorage.getItem('saas_active_tab') || 'dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('saas_active_tab', activeTab);
+  }, [activeTab]);
+
   // Core application states
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
@@ -403,9 +429,19 @@ export default function App() {
               console.log(`Found ${unsyncedTasks.length} unsynced local tasks. Push syncing...`);
               for (const task of unsyncedTasks) {
                 try {
-                  const { error: insErr } = await supabase
+                  let { error: insErr } = await supabase
                     .from('tasks')
                     .insert(toDBTask(task, user.id));
+                  
+                  if (insErr && (insErr.message.includes('position') || insErr.message.includes('Column not found') || insErr.message.includes('Could not find'))) {
+                    console.log('Position column missing in Supabase. Enforcing self-healing fallback dynamic insert...');
+                    localStorage.setItem('supabase_has_position_columns', 'false');
+                    const healedRes = await supabase
+                      .from('tasks')
+                      .insert(toDBTask(task, user.id));
+                    insErr = healedRes.error;
+                  }
+
                   if (!insErr) {
                     finalTasks.push(task);
                   } else {
@@ -561,7 +597,7 @@ export default function App() {
     setTasks(updatedTasksList);
 
     // Sync positions
-    if (isSupabaseConfigured && supabase && user && isRealSupabaseUser(user)) {
+    if (isSupabaseConfigured && supabase && user && isRealSupabaseUser(user) && localStorage.getItem('supabase_has_position_columns') !== 'false') {
       try {
         const updates = updatedPositions.map(ut => {
           return supabase!
@@ -570,7 +606,10 @@ export default function App() {
             .eq('id', ut.id);
         });
         await Promise.all(updates);
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.message?.includes('position') || err?.message?.includes('Could not find')) {
+          localStorage.setItem('supabase_has_position_columns', 'false');
+        }
         console.error('Failed to sync updated positions to Supabase:', err);
       }
     } else if (user) {
@@ -1061,10 +1100,20 @@ export default function App() {
 
       if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
         try {
-          const { error } = await supabase
+          let { error } = await supabase
             .from('tasks')
             .update(toDBTask(updatedItem, user.id))
             .eq('id', editingTask.id);
+          
+          if (error && (error.message.includes('position') || error.message.includes('Column not found') || error.message.includes('Could not find'))) {
+            localStorage.setItem('supabase_has_position_columns', 'false');
+            const healedRes = await supabase
+              .from('tasks')
+              .update(toDBTask(updatedItem, user.id))
+              .eq('id', editingTask.id);
+            error = healedRes.error;
+          }
+
           if (error) {
             console.error('Failed to sync edit to database:', error.message);
             setDbSyncError(error.message);
@@ -1109,9 +1158,18 @@ export default function App() {
 
       if (isSupabaseConfigured && supabase && isRealSupabaseUser(user)) {
         try {
-          const { error } = await supabase
+          let { error } = await supabase
             .from('tasks')
             .insert(toDBTask(newItem, user.id));
+          
+          if (error && (error.message.includes('position') || error.message.includes('Column not found') || error.message.includes('Could not find'))) {
+            localStorage.setItem('supabase_has_position_columns', 'false');
+            const healedRes = await supabase
+              .from('tasks')
+              .insert(toDBTask(newItem, user.id));
+            error = healedRes.error;
+          }
+
           if (error) {
             console.error('Failed database sync on insert:', error.message);
             setDbSyncError(error.message);
@@ -1419,647 +1477,495 @@ export default function App() {
                 <button
                   type="submit"
                   disabled={authActionLoading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                  className="w-full py-3 bg-[#6366F1] hover:bg-[#4F46E5] disabled:bg-slate-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer font-sans"
                 >
                   {authActionLoading ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : isSingupMode ? (
-                    t.signUpBtn
                   ) : (
-                    t.signInBtn
+                    isSingupMode 
+                      ? (language === 'ar' ? 'إنشاء حساب جديد' : 'Create Account') 
+                      : (language === 'ar' ? 'تسجيل دخول' : 'Sign In')
                   )}
                 </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignupMode(!isSingupMode);
+                      setAuthError('');
+                      setAuthSuccessMsg('');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:underline cursor-pointer"
+                  >
+                    {isSingupMode 
+                      ? (language === 'ar' ? 'لديك حساب بالفعل؟ سجل دخولك' : 'Already have an account? Sign In') 
+                      : (language === 'ar' ? 'ليس لديك حساب؟ سجل حساباً جديداً' : "Don't have an account? Sign Up")}
+                  </button>
+                </div>
               </form>
-            )}
-
-            {!isForgotPasswordMode && (
-              <div className="flex items-center justify-between text-xs pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignupMode(!isSingupMode);
-                    setAuthError('');
-                    setAuthSuccessMsg('');
-                  }}
-                  className="text-emerald-600 hover:text-emerald-700 font-bold hover:underline cursor-pointer"
-                >
-                  {isSingupMode ? t.switchSignUp : t.switchSignIn}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleContinueAsGuest}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold flex items-center gap-0.5 cursor-pointer"
-                >
-                  <span>{t.continueAsGuest}</span>
-                  <CornerDownLeft size={12} />
-                </button>
-              </div>
             )}
           </div>
         </main>
 
-        <footer className="text-center py-6 text-xs text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-900">
-          {language === 'ar' ? 'منظم حياتي © 2026 مصصم بواسطة Mo_Rady' : 'My Organizer © 2026 Designed by Mo_Rady'}
+        <footer className="relative z-10 max-w-md mx-auto w-full px-6 py-4 text-center">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">
+            {language === 'ar' ? 'جميع الحقوق محفوظة © لمنظم حياتي' : 'All rights reserved © My Organizer'}
+          </p>
         </footer>
       </div>
     );
   }
 
-  // Workspace View
   return (
     <div 
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-16 selection:bg-emerald-100 selection:text-emerald-900 font-sans transition-colors duration-200" 
+      className="min-h-screen bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 selection:bg-[#6366F1]/20 selection:text-indigo-200 font-sans flex overflow-hidden h-screen transition-colors duration-300" 
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
-      {/* Database Schema Setup Instruction Modal or Card if trigger is clicked */}
-      <AnimatePresence>
-        {isSqlPanelOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4"
-          >
-            <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <Database size={18} />
-                  <span className="font-extrabold text-sm">
-                    {language === 'ar' ? 'أكواد SQL لإنشاء الجدول في Supabase' : 'SQL Code to Schema Setup in Supabase'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsSqlPanelOpen(false)}
-                  className="text-slate-400 hover:text-white text-xs font-bold cursor-pointer"
-                >
-                  {language === 'ar' ? 'إغلاق نافذة الأكواد ×' : 'Close Panel ×'}
-                </button>
-              </div>
-
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                {language === 'ar' 
-                  ? 'انسخ الكود بالأسفل والصقه بداخل "SQL Editor" في لوحة تحكم مشروعك بـ Supabase لإنشاء جدول المهام المطلوب وتطبيق سياسات الأمان والحماية فوراً:'
-                  : 'Copy the query below and paste it into the "SQL Editor" inside your Supabase project dashboard to create the tasks table and activate secure database policies immediately:'
-                }
-              </p>
-
-              <div className="relative">
-                <pre className="bg-slate-950 p-4 rounded-xl text-[10px] font-mono overflow-x-auto text-emerald-300 leading-relaxed border border-slate-800/80 max-h-56">
-                  {SUPABASE_SETUP_SQL}
-                </pre>
-                <button
-                  onClick={handleCopySql}
-                  className="absolute left-3 top-3 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 flex items-center gap-1 transition-all cursor-pointer"
-                >
-                  {copiedSql ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-                  <span>{copiedSql ? (language === 'ar' ? 'تم النسخ في الحافظة!' : 'Copied!') : (language === 'ar' ? 'نسخ الكود' : 'Copy Code')}</span>
-                </button>
-              </div>
-
-              <div className="bg-white/5 p-3 rounded-lg border border-white/5 text-[11px] text-slate-300 leading-relaxed space-y-1">
-                <span className="font-bold block text-emerald-400">
-                  {language === 'ar' ? '📍 خطوات ربط المفاتيح في منصة AI Studio:' : '📍 How to connect Supabase keys in AI Studio:'}
-                </span>
-                <p>
-                  {language === 'ar' 
-                    ? '1. اذهب لقسم الإعدادات / الأسرار (Secrets panel) في الواجهة الجانبية لـ AI Studio.' 
-                    : '1. Navigate to the Secrets Panel in the sidebar menu of your AI Studio environment.'
-                  }
-                </p>
-                <p>
-                  {language === 'ar' 
-                    ? '2. أضف مفتاحين جديدين باسم: VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY.' 
-                    : '2. Create two new secrets: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY with your values.'
-                  }
-                </p>
-                <p>
-                  {language === 'ar' 
-                    ? '3. سيتم المزامنة السحابية الفورية الآمنة بمتصفحك بلحظتها دون إعادة تشغيل!' 
-                    : '3. Fully secure automatic cloud sync will take effect instantly in your app!'
-                  }
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Visual Ambient Header Background */}
-      <div className="relative bg-gradient-to-r from-emerald-950 via-teal-900 to-emerald-950 text-white overflow-hidden py-9 px-4 md:px-10 border-b border-emerald-900/40 shadow-sm">
-        <div className="absolute top-0 right-0 left-0 bottom-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
-        
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isSupabaseConfigured && isRealSupabaseUser(user)
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-              }`}>
-                {isSupabaseConfigured && isRealSupabaseUser(user) ? <Database size={10} /> : <AlertCircle size={10} />}
-                <span>
-                  {isSupabaseConfigured && isRealSupabaseUser(user) ? t.supabaseActive : t.offlineMode}
-                </span>
-              </span>
-              
-              <button
-                onClick={() => setIsHelpOpen(!isHelpOpen)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 text-[10px] font-bold hover:bg-blue-500/20 transition-all cursor-pointer"
-              >
-                <Info size={10} />
-                <span>{t.guideTitle}</span>
-              </button>
-            </div>
-
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight font-sans" id="applet-title">
-              {t.title} <span className="text-emerald-400">{t.subtitle}</span>
-            </h1>
-            <p className="text-emerald-200/90 text-xs md:text-sm font-medium">
-              <HeaderGreeting language={language} />
-            </p>
-          </div>
-
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
-            {/* Language Toggle Switch */}
-            <motion.button
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="bg-white/5 backdrop-blur-md hover:bg-white/10 p-3 rounded-2xl border border-white/10 transition-all cursor-pointer flex items-center gap-1.5 text-white text-xs font-bold"
-              title={language === 'ar' ? 'Switch to English' : 'التحويل للغة العربية'}
-              id="lang-toggle-btn"
-            >
-              <Globe size={18} className="text-emerald-300 animate-spin-slow" />
-              <span>{language === 'ar' ? 'English' : 'العربية'}</span>
-            </motion.button>
-
-            {/* Dark Mode Switcher Button */}
-            <motion.button
-              whileHover={{ scale: 1.08, rotate: [0, -15, 15, 0] }}
-              whileTap={{ scale: 0.92 }}
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="bg-white/5 backdrop-blur-md hover:bg-white/10 p-3 rounded-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center text-white"
-              title={isDarkMode ? (language === 'ar' ? 'التبديل إلى الوضع المضيء' : 'Switch to Light Mode') : (language === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')}
-              id="theme-toggle-btn"
-            >
-              {isDarkMode ? <Sun size={18} className="text-amber-300" /> : <Moon size={18} className="text-blue-200" />}
-            </motion.button>
-
-            {/* Live clock */}
-            <HeaderLiveClock language={language} label={t.clockTitle} />
-
-            {/* Profile Detail */}
-            {user && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/15 p-3 flex items-center gap-3 shadow-inner">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white font-extrabold flex items-center justify-center border-2 border-white/20 text-sm shadow">
-                  {user.email ? user.email[0].toUpperCase() : 'U'}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-white text-xs font-black truncate max-w-[90px] font-sans">
-                    {user.email ? user.email.split('@')[0] : 'User'}
-                  </span>
-                  <button 
-                    onClick={handleLogout}
-                    className="text-[10px] text-red-300 hover:text-red-400 font-extrabold flex items-center gap-0.5 transition-all w-fit cursor-pointer"
-                  >
-                    <LogOut size={10} />
-                    <span>{language === 'ar' ? 'خروج' : 'Logout'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      
+      {/* 1. Desktop & Mobile Drawer Sidebar Wrapper */}
+      <div className={`hidden md:block shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+        <SaaSSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isCollapsed={isSidebarCollapsed}
+          setIsCollapsed={setIsSidebarCollapsed}
+          isOpenMobile={false}
+          setIsOpenMobile={() => {}}
+          user={user}
+          onLogout={handleLogout}
+          language={language}
+        />
       </div>
 
-      {/* Deploy & Git Help Panel (Collapsible) */}
+      {/* Mobile Drawer (collapsible menu) */}
       <AnimatePresence>
-        {isHelpOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-6 overflow-hidden"
-          >
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-850 p-6 shadow-md space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h4 className="font-extrabold text-slate-800 dark:text-white text-sm flex items-center gap-2">
-                  <Github className="text-slate-700 dark:text-slate-350" size={18} />
-                  <span>{language === 'ar' ? 'دليل الإطلاق الشامل: التصدير لـ GitHub والرفع بـ Cloudflare Pages 🌐' : 'Comprehensive Launch Guide: Export to GitHub & Deploy to Cloudflare Pages 🌐'}</span>
-                </h4>
-                <button 
-                  onClick={() => setIsHelpOpen(false)}
-                  className="text-xs text-slate-400 font-bold hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
-                >
-                  {language === 'ar' ? 'إغلاق الدليل ×' : 'Close Guide ×'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                {/* Section 1: GitHub */}
-                <div className="space-y-2.5 p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-850">
-                  <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 text-sm">
-                    <Github size={16} className="text-slate-900 dark:text-slate-200" />
-                    <span>{language === 'ar' ? '1. الربط والتصدير إلى GitHub' : '1. Connect and Export to GitHub'}</span>
-                  </span>
-                  <ol className="list-decimal list-inside space-y-2 pl-1">
-                    <li>{language === 'ar' ? 'اضغط على قائمة Export في الزاوية العلوية لمنصة AI Studio.' : 'Click on the Export menu in the top corner of the AI Studio workspace.'}</li>
-                    <li>{language === 'ar' ? 'اختر Export to GitHub، وسيتم رفع كامل الكود لمستودعك.' : 'Select Export to GitHub to push your clean code automatically to your repository.'}</li>
-                    <li>{language === 'ar' ? 'أو خذ نسخة كاملة مضغوطة عبر Download as ZIP وقم برفعها يدوياً.' : 'Or download a ZIP archive of the project and push it to your GitHub account.'}</li>
-                  </ol>
-                </div>
-
-                {/* Section 2: Cloudflare */}
-                <div className="space-y-2.5 p-4 bg-emerald-50/40 dark:bg-emerald-950/10 rounded-xl border border-emerald-100/10 dark:border-emerald-950/20">
-                  <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5 text-sm">
-                    <CloudLightning size={16} className="text-emerald-600" />
-                    <span>{language === 'ar' ? '2. الاستضافة المجانية على Cloudflare Pages' : '2. Host Free on Cloudflare Pages'}</span>
-                  </span>
-                  <ol className="list-decimal list-inside space-y-2 pl-1">
-                    <li>{language === 'ar' ? 'افتح حساب كلاودفلير المجاني ثم توجه لقسم Pages.' : 'Create a free Cloudflare account and navigate to Pages.'}</li>
-                    <li>{language === 'ar' ? 'اربط مستودع GitHub الخاص بك الذي قمت بتصديره للتو.' : 'Connect the GitHub repository that you just created/exported.'}</li>
-                    <li>{language === 'ar' ? 'اضبط أمر البناء إلى npm run build ومسار المخرجات إلى dist.' : 'Set build command to "npm run build" and output directory to "dist".'}</li>
-                    <li>{language === 'ar' ? 'اضغط على Save and Deploy لتشغيل موقعك الفعلي بالكامل!' : 'Click Save and Deploy to launch your production worker live in seconds!'}</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+        {isMobileSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="absolute inset-0 bg-[#020617]/80 backdrop-blur-sm"
+            />
+            
+            {/* Drawer Content */}
+            <motion.div
+              initial={{ x: language === 'ar' ? 288 : -288 }}
+              animate={{ x: 0 }}
+              exit={{ x: language === 'ar' ? 288 : -288 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className={`relative w-72 h-full bg-[#0F172A] ${language === 'ar' ? 'border-l' : 'border-r'} border-white/5 z-10`}
+            >
+              <SaaSSidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isCollapsed={false}
+                setIsCollapsed={() => {}}
+                isOpenMobile={isMobileSidebarOpen}
+                setIsOpenMobile={setIsMobileSidebarOpen}
+                user={user}
+                onLogout={handleLogout}
+                language={language}
+              />
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
-      {/* Main Container Dashboard Workspace */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-8">
+
+      {/* 2. Main Content Screen Wrapper */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-[#0B0F19] transition-colors duration-300">
         
-        {/* Database Synchronization Warning banner if dbSyncError is present */}
+        {/* Top Professional Navbar */}
+        <header className="h-16 px-6 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#0F172A]/40 backdrop-blur-md z-10 transition-colors duration-300">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger menu toggle button */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="p-1 px-2 text-slate-500 hover:text-slate-800 dark:text-[#94A3B8] dark:hover:text-white md:hidden mr-1 text-lg cursor-pointer"
+            >
+              ☰
+            </button>
+
+            {/* Display title based on activeTab */}
+            <div className="flex flex-col">
+              <h2 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-none">
+                {activeTab === 'dashboard' && (language === 'ar' ? 'لوحة تنظيم المهام ⏱️' : 'Task Planner Hub ⏱️')}
+                {activeTab === 'habits' && (language === 'ar' ? 'مستكشف العادات الكولاجية 🌱' : 'Cognitive Habit Engine 🌱')}
+                {activeTab === 'pomodoro' && (language === 'ar' ? 'مساعد الفوكس والتركيز 🎯' : 'Attention Flow Engine 🎯')}
+                {activeTab === 'notes' && (language === 'ar' ? 'المفكرة الفكرية الذكية 🧠' : 'Cognitive Sandbox 🧠')}
+                {activeTab === 'ai_assistant' && (language === 'ar' ? 'استشاري الإنتاجية سيرين AI 🧠' : 'AI Strategic Assistant 🧠')}
+                {activeTab === 'stats' && (language === 'ar' ? 'المقاييس البيانية والتقارير 📊' : 'Performance Diagnostics 📊')}
+              </h2>
+              <span className="text-[10px] text-[#64748B] mt-1 font-sans hidden sm:inline">
+                {activeTab === 'dashboard' && (language === 'ar' ? 'إدارة الخطط الزمنية وجداول الأعمال' : 'Configure milestones and timeline checkoffs')}
+                {activeTab === 'habits' && (language === 'ar' ? 'صياغة عادات ذكية وتتبع السلاسل الحركية المتكاملة' : 'Re-engineer behavioral patterns and track daily streak chains')}
+                {activeTab === 'pomodoro' && (language === 'ar' ? 'جلسات تركيز عميقة خالية من المشتتات مع مولد الذبذبات الصوتيّة' : 'Stave off distractions and listen to clean auditory focus loop loops')}
+                {activeTab === 'notes' && (language === 'ar' ? 'مساحة منظمة لتلخيص الأفكار ومذكراتك الحرة بفرشاة الذكاء الاصطناعي' : 'Dynamic canvas with server-side AI context summarization')}
+                {activeTab === 'ai_assistant' && (language === 'ar' ? 'حلول جدولة وتخطيط فوري لمهامك بالاستعانة بخبراء Gemini' : 'Orchestrated timelines and scheduling analysis on demand')}
+                {activeTab === 'stats' && (language === 'ar' ? 'مراجعة نسب الالتزام والتوزيع الزمني لحجم إنجازك' : 'Interactive charting analysis')}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Live Clock Indicator */}
+            <HeaderLiveClock language={language} label={t.clockTitle} />
+
+            {/* Language Selection Toggle */}
+            <button
+              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer text-slate-705 dark:text-white"
+            >
+              <Globe size={14} className="text-[#6366F1]" />
+              <span className="hidden sm:inline">{language === 'ar' ? 'English' : 'العربية'}</span>
+            </button>
+
+            {/* Light/Dark Mode Selection Toggle */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1E293B] dark:hover:bg-[#334155] border border-slate-200 dark:border-white/5 transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer text-slate-705 dark:text-white animate-none"
+              title={language === 'ar' ? 'تبديل المظهر' : 'Toggle Theme'}
+            >
+              {isDarkMode ? (
+                <>
+                  <Sun size={14} className="text-amber-500 animate-[spin_10s_linear_infinite]" />
+                  <span className="hidden sm:inline">{language === 'ar' ? 'مضيء' : 'Light'}</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={14} className="text-indigo-600" />
+                  <span className="hidden sm:inline">{language === 'ar' ? 'مظلم' : 'Dark'}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* Sync Warn banner */}
         <AnimatePresence>
           {dbSyncError && (
             <motion.div
-              initial={{ height: 0, opacity: 0, scale: 0.95 }}
-              animate={{ height: "auto", opacity: 1, scale: 1 }}
-              exit={{ height: 0, opacity: 0, scale: 0.95 }}
-              className="mb-6 bg-amber-500/10 border border-amber-500/20 text-amber-300 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 overflow-hidden"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mx-6 mt-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 flex items-center justify-between gap-4 shrink-0"
             >
-              <div className="flex gap-3">
-                <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={20} />
-                <div className="space-y-1">
-                  <h4 className="font-bold text-sm text-amber-200">
-                    {language === 'ar' ? '⚠️ تنبيه: تعذر مزامنة بعض المهام مع قاعدة البيانات السحابية (Supabase)' : 'Database Sync issue alert'}
-                  </h4>
-                  <p className="text-xs text-amber-300 font-sans leading-relaxed">
-                    {language === 'ar' 
-                      ? `تم حفظ المهام وتعديلها محلياً بجهازك بأمان، ولكن واجه الاتصال بـ Supabase مشكلة: ${dbSyncError}`
-                      : `Changes are saved locally, but database returned: ${dbSyncError}`}
-                  </p>
-                  <p className="text-[10px] text-amber-400/80">
-                    {language === 'ar'
-                      ? 'تأكد من إضافة جدول المهام "tasks" وتفعيل سياسات الوصول (RLS) الموضحة في "دليل استضافة وقواعد بيانات العميل" بالأعلى.'
-                      : 'Please verify that the "tasks" table and Row Level Security (RLS) policies are correctly configured via the DB Setup guide.'}
-                  </p>
-                </div>
+              <div className="flex gap-2">
+                <AlertCircle size={16} className="text-amber-400 mt-0.5 shrink-0" />
+                <p className="text-xs font-sans">
+                  {language === 'ar' 
+                    ? `تنبيه مزامنة Supabase بقيمة: ${dbSyncError}. تم حفظ العمل محلياً بأمان.` 
+                    : `Database issue cached: ${dbSyncError}. Changes synced safely locally.`}
+                </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                <button
-                  onClick={async () => {
-                    await fetchTasks();
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs border border-amber-500/30 transition-all cursor-pointer"
-                >
-                  {language === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry Sync 🔄'}
-                </button>
-                <button
-                  onClick={() => setIsHelpOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 font-bold text-xs border border-blue-500/30 transition-all cursor-pointer"
-                >
-                  {language === 'ar' ? 'عرض التعليمات 📖' : 'Show Guide 📖'}
-                </button>
-                <button
-                  onClick={() => setDbSyncError('')}
-                  className="p-1 px-2.5 rounded-xl text-amber-400 hover:bg-white/5 transition-all text-sm font-bold cursor-pointer"
-                  title="إخفاء التنبيه"
-                >
-                  ✕
-                </button>
+              <button
+                onClick={() => setDbSyncError('')}
+                className="text-xs font-bold text-amber-200 hover:text-white cursor-pointer px-2"
+              >
+                ✕
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Database setup instructions inside workspace */}
+        <AnimatePresence>
+          {isSqlPanelOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mx-6 mt-4 shrink-0"
+            >
+              <div className="bg-slate-900 border border-white/5 rounded-2xl p-4 text-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <Database size={13} className="text-emerald-400" />
+                    <span>{language === 'ar' ? 'إعداد هيكل الجداول والسياسات في Supabase' : 'SQL Table Configuration Script'}</span>
+                  </span>
+                  <button onClick={() => setIsSqlPanelOpen(false)} className="text-[#94A3B8] hover:text-white">✕</button>
+                </div>
+                <div className="relative">
+                  <pre className="bg-[#0F172A] p-3 rounded-lg text-[9px] font-mono text-[#a5f3fc] overflow-x-auto border border-white/5 max-h-36">
+                    {SUPABASE_SETUP_SQL}
+                  </pre>
+                  <button
+                    onClick={handleCopySql}
+                    className="absolute left-2 top-2 px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-[9px] font-bold text-slate-300"
+                  >
+                    {copiedSql ? (language === 'ar' ? 'مكتمل!' : 'Copied!') : (language === 'ar' ? 'نسخ' : 'Copy')}
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Active Tab Main Screen Scroll Area */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
           
-          {/* Right Sidebar on desktop / Top on mobile: Analytics, Month switch config */}
-          <div className="lg:col-span-4 space-y-6">
-            
-            {/* Real Stats card reflecting checkboxes & values */}
-            <StatsCard tasks={tasks} />
-
-            {/* Calendar scheduler selector */}
-            <MonthSelector 
-              selectedMonth={selectedMonth} 
-              onMonthChange={(m) => {
-                setSelectedMonth(m);
-                setSelectedDay('all'); // reset day filter when month changes to avoid confusion
-              }} 
-              tasks={tasks}
-            />
-
-            {/* Achievement Trend chart - Recharts line chart */}
-            <TrendChart tasks={tasks} />
-
-            {/* Helpful Quotes/Tips block */}
-            <div className="bg-emerald-50/55 dark:bg-emerald-950/15 border border-emerald-100 dark:border-emerald-950/30 rounded-2xl p-4 text-xs text-emerald-800 dark:text-emerald-300 space-y-2 transition-all">
-              <span className="font-bold block text-emerald-900 dark:text-emerald-400 text-sm">💡 نصيحة تنظيمية:</span>
-              <p className="leading-relaxed">
-                قسّم مهامك الكبيرة إلى خطوات يومية صغيرة. تحديد أولوية المهام بلون مخصص والالتزام بشطبها فور إكمالها يرفع من دافعيتك ونسب التقدم طوال الشهر!
-              </p>
-            </div>
-          </div>
-
-          {/* Column for tasks and lists */}
-          <div className="lg:col-span-8 space-y-6">
-            
-            {/* Dynamic Add / Edit form toggle panel */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <span>مهام شهر {getSelectedMonthName()}</span>
-                    {selectedDay !== 'all' && (
-                      <span className="text-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded-md">اليوم {selectedDay}</span>
-                    )}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    تم تصفية <span className="font-bold text-slate-700 dark:text-slate-300">{filteredTasks.length}</span> من أصل <span className="font-bold text-slate-700 dark:text-slate-300">{tasks.length}</span> مهام إجمالية لـ <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{user?.email?.split('@')[0] || 'الضيف'}</span>.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => exportTasksToICS(tasks)}
-                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer shadow-sm"
-                    id="export-ics-btn"
-                    title="تصدير المهام لتقويم Google أو Apple"
-                  >
-                    <Calendar size={13} className="text-emerald-500 animate-pulse" />
-                    <span>تصدير للتقويم (.ics)</span>
-                  </button>
-
-                  {!isFormOpen && (
-                    <button
-                      onClick={() => {
-                        setEditingTask(null);
-                        setIsFormOpen(true);
-                      }}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-100 dark:shadow-none flex items-center gap-1.5 cursor-pointer"
-                      id="trigger-add-form-btn"
-                    >
-                      <Plus size={16} />
-                      <span>إضافة مهمة جديدة</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Collapsible Form Animation block */}
-              <AnimatePresence>
-                {isFormOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <TaskForm 
-                      onSubmit={handleFormSubmit}
-                      editingTask={editingTask}
-                      onCancelEdit={() => {
-                        setEditingTask(null);
-                        setIsFormOpen(false);
-                      }}
-                      defaultMonth={selectedMonth === 'all' ? (new Date().getMonth() + 1) : selectedMonth}
-                      defaultDay={selectedDay === 'all' ? new Date().getDate() : selectedDay}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Filter and search control board */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 shadow-sm space-y-3.5 transition-all">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+            >
               
-              {/* Search line */}
-              <div className="relative">
-                <Search className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث عن أي مهمة بالاسم أو تفاصيل الوصف..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
-                  id="task-search-input"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[11px] font-bold cursor-pointer font-arabic"
-                  >
-                    مسح
-                  </button>
-                )}
-              </div>
-
-              {/* Select filters toolbar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-50 dark:border-slate-800/60">
-                
-                {/* Left: Filter categories buttons map */}
-                <div className="flex flex-wrap items-center gap-1.5 font-arabic">
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold ml-1 flex items-center gap-1">
-                    <Filter size={11} />
-                    <span>الحالة:</span>
-                  </span>
+              {/* TAB 1: CORE PLANNING DASHBOARD */}
+              {activeTab === 'dashboard' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                   
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setStatusFilter('all')}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
-                      statusFilter === 'all' 
-                        ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-sm' 
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    الكل
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setStatusFilter('pending')}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
-                      statusFilter === 'pending' 
-                        ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40' 
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    المعلقة
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setStatusFilter('completed')}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
-                      statusFilter === 'completed' 
-                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40' 
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    المكتملة
-                  </motion.button>
-                </div>
-
-                {/* Right: Category filters options */}
-                <div className="flex flex-wrap items-center gap-1.5 font-arabic">
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-bold ml-1 flex items-center gap-1">
-                    <SlidersHorizontal size={11} />
-                    <span>أخرى:</span>
-                  </span>
-
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value as any)}
-                    className="px-2 py-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
-                    id="priority-filter-select"
-                  >
-                    <option value="all" className="dark:bg-slate-900">كل الأولويات</option>
-                    <option value="high" className="dark:bg-slate-900">عالية الأهمية</option>
-                    <option value="medium" className="dark:bg-slate-900">متوسطة</option>
-                    <option value="low" className="dark:bg-slate-900">منخفضة</option>
-                  </select>
-
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="px-2 py-1 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
-                    id="category-filter-select"
-                  >
-                    <option value="all" className="dark:bg-slate-900">كل الأقسام</option>
-                    {CATEGORIES.map(c => (
-                      <option key={c.id} value={c.id} className="dark:bg-slate-900">{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Timelines container */}
-            <div className="space-y-6" id="tasks-timeline-container">
-              {!tasksLoading && sortedDays.length > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50/70 border border-emerald-100/60 dark:bg-emerald-950/20 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs text-start md:hidden font-sans select-none animate-pulse">
-                  <span className="text-sm">💡</span>
-                  <span>
-                    {language === 'ar' 
-                      ? 'تلميح الهاتف: اسحب أي مهمة لليمين للشطب (Complete)، أو لليسار للحذف السريع!' 
-                      : 'Mobile Tip: Swipe any task right to complete, or left to delete instantly!'}
-                  </span>
-                </div>
-              )}
-
-              {tasksLoading ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-100 shadow-sm">
-                  <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2" />
-                  <span className="text-xs text-slate-400 font-semibold font-arabic">جاري استيراد مهامك سحابياً...</span>
-                </div>
-              ) : sortedDays.length > 0 ? (
-                sortedDays.map((day) => {
-                  const dayTasks = tasksByDay[day];
-                  return (
-                    <div key={day} className="space-y-2.5">
-                      {/* Day Title Ribbon */}
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                        <h3 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm font-arabic">
-                          يوم {day} من شهر {getSelectedMonthName()}
-                        </h3>
-                        <span className="text-[11px] text-slate-400 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-800/60 px-2 py-0.5 rounded-full font-bold">
-                          {dayTasks.length} {dayTasks.length === 1 ? 'مهمة' : 'مهام'}
-                        </span>
+                  {/* Left task filters and items list */}
+                  <div className="lg:col-span-8 space-y-6">
+                    
+                    {/* Add new task trigger form block */}
+                    <div className="bg-[#1E293B]/30 border border-white/5 rounded-3xl p-5 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? 'إدارة وتخطيط اليوم' : 'TASKS MANAGEMENT'}</h3>
+                          <p className="text-xs text-[#64748B] mt-0.5 font-sans">
+                            {language === 'ar' ? `قائمة مهام شهر ${getSelectedMonthName()}` : `Viewing scheduler list for ${getSelectedMonthName()}`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setEditingTask(null);
+                            setIsFormOpen(!isFormOpen);
+                          }}
+                          className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:opacity-90 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-505/10 cursor-pointer"
+                        >
+                          <Plus size={14} />
+                          <span>{language === 'ar' ? 'إضافة مهمة جديدة' : 'Add New Task'}</span>
+                        </button>
                       </div>
 
-                      {/* Day Tasks List with Staggered Animations */}
-                      <motion.div 
-                        key={`${day}-${selectedMonth}-${selectedDay}-${statusFilter}-${priorityFilter}-${categoryFilter}-${searchQuery.length > 0}`}
-                        variants={{
-                          hidden: { opacity: 0 },
-                          visible: {
-                            opacity: 1,
-                            transition: {
-                              staggerChildren: 0.07,
-                              delayChildren: 0.02
-                            }
-                          }
-                        }}
-                        initial="hidden"
-                        animate="visible"
-                        className="grid grid-cols-1 gap-3"
-                      >
-                        <AnimatePresence mode="popLayout">
-                          {dayTasks.map((task) => (
-                            <TaskItem
-                              key={task.id}
-                              task={task}
-                              onToggle={handleToggleTask}
-                              onDelete={handleDeleteTask}
-                              onEdit={handleEditTrigger}
-                              isOverdue={checkIsOverdue(task)}
+                      {/* Animated Task Form */}
+                      <AnimatePresence>
+                        {isFormOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden mt-2"
+                          >
+                            <TaskForm 
+                              onSubmit={handleFormSubmit}
+                              editingTask={editingTask}
+                              onCancelEdit={() => {
+                                setEditingTask(null);
+                                setIsFormOpen(false);
+                              }}
+                              defaultMonth={selectedMonth === 'all' ? (new Date().getMonth() + 1) : selectedMonth}
+                              defaultDay={selectedDay === 'all' ? new Date().getDate() : selectedDay}
                               language={language}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, task.id)}
-                              onDragOver={(e) => handleDragOver(e, task)}
-                              onDragEnter={(e) => handleDragEnter(e, task.id)}
-                              onDragLeave={handleDragLeave}
-                              onDragEnd={handleDragEnd}
-                              onDrop={(e) => handleDrop(e, task.id)}
-                              isDragging={draggedTaskId === task.id}
-                              isDragOver={dragOverTaskId === task.id}
                             />
-                          ))}
-                        </AnimatePresence>
-                      </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  );
-                })
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center p-12 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all"
-                  id="empty-tasks-placeholder"
-                >
-                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 text-slate-400/85 rounded-full flex items-center justify-center mb-4">
-                    <LayoutGrid size={28} className="text-slate-300 dark:text-slate-600" />
+
+                    {/* Filters Dashboard Panel bar */}
+                    <div className="bg-[#1E293B]/40 rounded-3xl border border-white/5 p-4 space-y-4">
+                      {/* Search box queries */}
+                      <div className="bg-[#0F172A] border border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+                        <Search size={14} className="text-[#475569]" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder={language === 'ar' ? 'ابحث عن أي مهمة بالاسم أو بالمحتوى المكتوب...' : 'Search tasks by title, agenda details...'}
+                          className="w-full bg-transparent border-none text-xs text-white focus:outline-none focus:ring-0 font-sans"
+                        />
+                      </div>
+
+                      {/* Select properties tools bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {[
+                            { id: 'all', labelAr: 'الكل', labelEn: 'All' },
+                            { id: 'pending', labelAr: 'المعلقة', labelEn: 'Pending' },
+                            { id: 'completed', labelAr: 'المكتملة', labelEn: 'Done' }
+                          ].map(opt => (
+                            <button
+                              key={opt.id}
+                              onClick={() => setStatusFilter(opt.id as any)}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                statusFilter === opt.id
+                                  ? 'bg-indigo-500/15 text-[#6366F1] border border-indigo-500/20'
+                                  : 'text-[#94A3B8] hover:text-white'
+                              }`}
+                            >
+                              {language === 'ar' ? opt.labelAr : opt.labelEn}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* select dropdowns */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            value={priorityFilter}
+                            onChange={(e) => setPriorityFilter(e.target.value as any)}
+                            className="bg-[#0F172A] text-[11px] text-[#94A3B8] font-bold border border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
+                          >
+                            <option value="all">{language === 'ar' ? 'كل الأولويات' : 'All Priority'}</option>
+                            <option value="high">{language === 'ar' ? 'عالية الأهمية 🟥' : 'High Priority'}</option>
+                            <option value="medium">{language === 'ar' ? 'متوسطة الأهمية 🟨' : 'Medium Priority'}</option>
+                            <option value="low">{language === 'ar' ? 'منخفضة الأهمية 🟩' : 'Low Priority'}</option>
+                          </select>
+
+                          <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="bg-[#0F172A] text-[11px] text-[#94A3B8] font-bold border border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
+                          >
+                            <option value="all">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</option>
+                            {CATEGORIES.map(c => (
+                              <option key={c.id} value={c.id}>{language === 'ar' ? c.name : c.id}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Active timelines sorted by day lists */}
+                    <div className="space-y-6">
+                      {tasksLoading ? (
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                          <Loader size={24} className="animate-spin text-indigo-500 mb-2" />
+                          <span className="text-xs text-[#64748B]">{language === 'ar' ? 'جاري استيراد وجدولة المهام...' : 'Retrieving active schedules...'}</span>
+                        </div>
+                      ) : sortedDays.length > 0 ? (
+                        sortedDays.map((day) => {
+                          const dayTasks = tasksByDay[day];
+                          return (
+                            <div key={day} className="space-y-3.5">
+                              {/* Day Label Tag */}
+                              <div className="flex items-center gap-2.5 px-1.5">
+                                <span className="w-1.5 h-3 rounded-full bg-[#6366F1] inline-block" />
+                                <h4 className="font-extrabold text-sm text-white">
+                                  {language === 'ar' ? `يوم ${day} من شهر ${getSelectedMonthName()}` : `Day ${day} ${getSelectedMonthName()}`}
+                                </h4>
+                                <span className="text-[10px] text-[#475569] font-black bg-[#1E293B] px-2 py-0.5 rounded-full font-mono">
+                                  {dayTasks.length} {language === 'ar' ? 'مهام' : 'tasks'}
+                                </span>
+                              </div>
+
+                              {/* Task Items grid */}
+                              <div className="grid grid-cols-1 gap-2.5">
+                                {dayTasks.map(task => (
+                                  <TaskItem
+                                    key={task.id}
+                                    task={task}
+                                    onToggle={handleToggleTask}
+                                    onDelete={handleDeleteTask}
+                                    onEdit={handleEditTrigger}
+                                    isOverdue={checkIsOverdue(task)}
+                                    language={language}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, task.id)}
+                                    onDragOver={(e) => handleDragOver(e, task)}
+                                    onDragEnter={(e) => handleDragEnter(e, task.id)}
+                                    onDragLeave={handleDragLeave}
+                                    onDragEnd={handleDragEnd}
+                                    onDrop={(e) => handleDrop(e, task.id)}
+                                    isDragging={draggedTaskId === task.id}
+                                    isDragOver={dragOverTaskId === task.id}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="p-12 text-center rounded-3xl bg-[#1E293B]/10 border border-white/5 flex flex-col items-center gap-3">
+                          <Calendar size={32} className="text-[#334155]" />
+                          <div>
+                            <h4 className="text-xs font-bold text-white mb-1">{language === 'ar' ? 'جدول المخططات فارغ' : 'A clean scheduler horizon'}</h4>
+                            <p className="text-[11px] text-[#64748B]">{language === 'ar' ? 'لا توجد مهام مطابقة لفلاتر التصفية النشطة.' : 'No tasks map onto your active filter rules.'}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-300 text-base mb-1">لا توجد مهام حالياً</h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm leading-relaxed mb-6">
-                    {searchQuery || categoryFilter !== 'all' || priorityFilter !== 'all' || statusFilter !== 'all'
-                      ? 'لا توجد مهام تطابق خيارات التصفية أو البحث. جرّب تخفيف قيود البحث.'
-                      : `لا توجد مهام مسجلة لشهر ${getSelectedMonthName()} حتى الان. ابدأ بكتابة أولى أعمالك المجدولة!`}
-                  </p>
-                  
-                  {!(searchQuery || categoryFilter !== 'all' || priorityFilter !== 'all' || statusFilter !== 'all') && (
-                    <button
-                      onClick={() => setIsFormOpen(true)}
-                      className="px-5 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40 rounded-xl transition-all cursor-pointer border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-1.5"
-                    >
-                      <Plus size={14} />
-                      <span>اضبط هدفك الأول لشهر {getSelectedMonthName()}</span>
-                    </button>
-                  )}
-                </motion.div>
+
+                  {/* Right side scheduler details */}
+                  <div className="lg:col-span-4 space-y-6">
+                    
+                    {/* Compact Metrics visual widget */}
+                    <StatsCard tasks={tasks} />
+
+                    {/* Integrated Calendar Scheduler Widget */}
+                    <MonthSelector
+                      selectedMonth={selectedMonth}
+                      onMonthChange={(m) => {
+                        setSelectedMonth(m);
+                        setSelectedDay('all');
+                      }}
+                      tasks={tasks}
+                    />
+
+                    {/* Accomplishment Tendence Trend widgets */}
+                    <TrendChart tasks={tasks} />
+
+                    {/* Export / Sync Options card */}
+                    <div className="p-5 rounded-3xl bg-[#1E293B]/40 border border-white/5 space-y-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-white">{language === 'ar' ? 'الاستيراد والتصدير والمزامنة' : 'Data Integrity & Feeds'}</h4>
+                        <p className="text-[10px] text-[#64748B] mt-1 font-sans">{language === 'ar' ? 'قم بتصدير مهام حياتك لتقويمات Google أو Apple بنقرة واحدة.' : 'Consolidate plans and push outputs to Apple or Google feeds.'}</p>
+                      </div>
+                      <button
+                        onClick={() => exportTasksToICS(tasks)}
+                        className="w-full py-2.5 rounded-xl bg-[#1E293B] hover:bg-[#334155] border border-white/5 text-[#CBD5E1] hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Calendar size={13} className="text-[#6366F1]" />
+                        <span>{language === 'ar' ? 'تصدير للتقويم (.ics)' : 'Export calendar feed (.ics)'}</span>
+                      </button>
+                    </div>
+
+                  </div>
+
+                </div>
               )}
-            </div>
-          </div>
+
+              {/* TAB 2: HABIT TRACKER */}
+              {activeTab === 'habits' && (
+                <HabitTracker userId={user.id} language={language} />
+              )}
+
+              {/* TAB 3: POMODORO TIMER WORKSPACE */}
+              {activeTab === 'pomodoro' && (
+                <PomodoroTimer language={language} />
+              )}
+
+              {/* TAB 4: SMART COGNITIVE NOTES */}
+              {activeTab === 'notes' && (
+                <SmartNotes userId={user.id} language={language} />
+              )}
+
+              {/* TAB 5: AI STRATEGIC COACH */}
+              {activeTab === 'ai_assistant' && (
+                <AIAssistant tasks={tasks} language={language} />
+              )}
+
+              {/* TAB 6: PERFORMANCE ANALYTICS */}
+              {activeTab === 'stats' && (
+                <SaaSStats tasks={tasks} language={language} />
+              )}
+
+            </motion.div>
+          </AnimatePresence>
+
         </div>
-      </main>
+
+      </div>
+
     </div>
   );
 }
