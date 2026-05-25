@@ -2209,10 +2209,10 @@ export default function App() {
                 </div>
               )}
 
-              {/* TAB 3: POMODORO TIMER WORKSPACE */}
-              {activeTab === 'pomodoro' && (
+              {/* TAB 3: POMODORO TIMER WORKSPACE (always mounted to keep timer state) */}
+              <div className={activeTab === 'pomodoro' ? 'block' : 'hidden'}>
                 <PomodoroTimer language={language} />
-              )}
+              </div>
 
               {/* TAB 6: PERFORMANCE ANALYTICS */}
               {activeTab === 'stats' && (

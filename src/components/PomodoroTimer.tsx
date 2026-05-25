@@ -17,7 +17,7 @@ import {
 interface FocusLog {
   id: string;
   duration: number; // minutes
-  type: 'work' | 'short' | 'long';
+  type: 'work' | 'break';
   timestamp: string;
 }
 
@@ -33,22 +33,22 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     }
     return 25;
   });
-  const [shortDuration, setShortDuration] = useState<number>(() => {
+  const [breakDuration, setBreakDuration] = useState<number>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pomodoro_short_duration');
+      const saved = localStorage.getItem('pomodoro_break_duration');
       return saved ? parseInt(saved, 10) : 5;
     }
     return 5;
   });
-  const [longDuration, setLongDuration] = useState<number>(() => {
+  const [targetSessions, setTargetSessions] = useState<number>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pomodoro_long_duration');
-      return saved ? parseInt(saved, 10) : 15;
+      const saved = localStorage.getItem('pomodoro_target_sessions');
+      return saved ? parseInt(saved, 10) : 4;
     }
-    return 15;
+    return 4;
   });
 
-  const [sessionType, setSessionType] = useState<'work' | 'short' | 'long'>('work');
+  const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
   const [secondsLeft, setSecondsLeft] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('pomodoro_work_duration');
@@ -63,8 +63,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
   // Config presets in seconds (dynamic from state)
   const PRESETS = {
     work: workDuration * 60,
-    short: shortDuration * 60,
-    long: longDuration * 60
+    break: breakDuration * 60
   };
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -116,23 +115,18 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
           const osc1 = ctx.createOscillator();
           const gain1 = ctx.createGain();
           osc1.type = 'square';
-          osc1.frequency.setValueAtTime(800, ctx.currentTime + delay);
-          gain1.gain.setValueAtTime(0.08, ctx.currentTime + delay);
-          gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
+          osc1.frequency.setValueAtTime(880, ctx.currentTime + delay);
+          gain1.gain.setValueAtTime(0.5, ctx.currentTime + delay); // Louder
+          gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3); // Longer decay
           osc1.connect(gain1);
           gain1.connect(ctx.destination);
           osc1.start(ctx.currentTime + delay);
-          osc1.stop(ctx.currentTime + delay + 0.2);
+          osc1.stop(ctx.currentTime + delay + 0.4);
         };
-        // Play an alarm repeating pattern (4 beeps)
-        playRing(0);
-        playRing(0.2);
-        playRing(0.4);
-        playRing(0.6);
-        playRing(1.0);
-        playRing(1.2);
-        playRing(1.4);
-        playRing(1.6);
+        // Play an alarm repeating pattern (10 beeps)
+        for (let i = 0; i < 10; i++) {
+          playRing(i * 0.4);
+        }
       }
     } catch (e) {
       // safe fallback
@@ -176,7 +170,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     setSecondsLeft(PRESETS[sessionType]);
   };
 
-  const handleSwitchPreset = (type: 'work' | 'short' | 'long') => {
+  const handleSwitchPreset = (type: 'work' | 'break') => {
     setIsRunning(false);
     setSessionType(type);
     setSecondsLeft(PRESETS[type]);
@@ -234,8 +228,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
         <div className="flex bg-slate-50 dark:bg-[#0F172A] p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 gap-1 mb-8 self-center">
           {[
             { id: 'work', labelAr: 'التركيز العملي', labelEn: 'Deep Work', colorClass: 'text-[#6366F1]' },
-            { id: 'short', labelAr: 'استراحة قصيرة', labelEn: 'Short Break', colorClass: 'text-emerald-500' },
-            { id: 'long', labelAr: 'استراحة طويلة', labelEn: 'Long Break', colorClass: 'text-cyan-550' }
+            { id: 'break', labelAr: 'استراحة', labelEn: 'Break', colorClass: 'text-emerald-500' }
           ].map(opt => (
             <button
               key={opt.id}
@@ -343,7 +336,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
               <Sparkles size={11} className="text-[#6366F1]" />
               <span>{language === 'ar' ? 'إعداد فترات مخصصة' : 'Custom Session Times'}</span>
             </h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-[9px] font-bold text-[#64748B] dark:text-[#94A3B8] mb-1">
                   {language === 'ar' ? 'التركيز (بالدقائق)' : 'Focus (Mins)'}
@@ -372,14 +365,31 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
                   type="number"
                   min="1"
                   max="60"
-                  value={shortDuration}
+                  value={breakDuration}
                   onChange={(e) => {
                     const val = Math.max(1, parseInt(e.target.value, 10) || 1);
-                    setShortDuration(val);
-                    localStorage.setItem('pomodoro_short_duration', val.toString());
-                    if (sessionType === 'short' && !isRunning) {
+                    setBreakDuration(val);
+                    localStorage.setItem('pomodoro_break_duration', val.toString());
+                    if (sessionType === 'break' && !isRunning) {
                       setSecondsLeft(val * 60);
                     }
+                  }}
+                  className="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-[#64748B] dark:text-[#94A3B8] mb-1">
+                  {language === 'ar' ? 'الهدف (جلسات)' : 'Target Sessions'}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={targetSessions}
+                  onChange={(e) => {
+                    const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                    setTargetSessions(val);
+                    localStorage.setItem('pomodoro_target_sessions', val.toString());
                   }}
                   className="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
                 />
@@ -410,7 +420,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             <div>
               <span className="block text-[10px] font-medium text-slate-500 dark:text-[#94A3B8]">{language === 'ar' ? 'جلسات العمل' : 'Sessions Done'}</span>
               <span className="text-lg font-mono font-black text-emerald-500 dark:text-emerald-400">
-                {focusLogs.filter(l => l.type === 'work').length}
+                {focusLogs.filter(l => l.type === 'work').length} <span className="text-sm text-slate-400 dark:text-slate-500">/ {targetSessions}</span>
               </span>
             </div>
           </div>
