@@ -40,8 +40,6 @@ export default function SaaSSidebar({
   const menuItems = [
     { id: 'dashboard', nameAr: 'لوحة التحكم والمهام', nameEn: 'Dashboard & Tasks', icon: LayoutGrid },
     { id: 'pomodoro', nameAr: 'مؤقت البومودورو والتركيز', nameEn: 'Pomodoro Focus', icon: Timer },
-    { id: 'notes', nameAr: 'المفكرة الذكية بالذكاء الاصطناعي', nameEn: 'Smart AI Notes', icon: StickyNote },
-    { id: 'ai_assistant', nameAr: 'مخطط ومساعد الذكاء الاصطناعي', nameEn: 'AI Coach & Planner', icon: Sparkles },
     { id: 'stats', nameAr: 'التقارير والتحليلات البيانية', nameEn: 'Reports & Analytics', icon: TrendingUp },
   ];
 

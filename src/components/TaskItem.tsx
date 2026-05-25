@@ -136,27 +136,37 @@ export default function TaskItem({
 
   // Set up staggered framer motion item variants
   const itemVariants: any = {
-    hidden: { opacity: 0, y: 15, scale: 0.98 },
+    hidden: { opacity: 0, y: 30, scale: 0.96 },
     visible: { 
       opacity: 1, 
       y: 0, 
       scale: 1,
       transition: {
         type: 'spring',
-        stiffness: 110,
-        damping: 15
+        stiffness: 140,
+        damping: 18,
+        mass: 1
       }
     },
     exit: { 
       opacity: 0, 
-      scale: 0.95, 
-      y: -10, 
-      transition: { duration: 0.15 } 
+      scale: 0.96, 
+      y: -20, 
+      transition: { duration: 0.2, ease: 'easeOut' } 
     }
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl w-full group/swipe select-none" style={{ touchAction: 'pan-y' }}>
+    <motion.div 
+      layout
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-10px' }}
+      exit="exit"
+      variants={itemVariants}
+      className="relative overflow-hidden rounded-xl w-full group/swipe select-none" 
+      style={{ touchAction: 'pan-y' }}
+    >
       {/* BACKGROUND SWIPE ACTION TRACKS */}
       <div className="absolute inset-0 flex items-center justify-between pointer-events-none select-none z-0 rounded-xl">
         {/* Left Swipe Track (revealed on Swipe Right) -> Green/Complete */}
@@ -183,7 +193,6 @@ export default function TaskItem({
       {/* FRONT DRAGGABLE LAYER */}
       <motion.div
         layout
-        variants={itemVariants}
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
@@ -382,6 +391,6 @@ export default function TaskItem({
         </motion.button>
       </div>
     </motion.div>
-    </div>
+    </motion.div>
   );
 }

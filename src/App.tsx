@@ -52,8 +52,6 @@ import { TRANSLATIONS } from './translations';
 
 import SaaSSidebar from './components/SaaSSidebar';
 import PomodoroTimer from './components/PomodoroTimer';
-import SmartNotes from './components/SmartNotes';
-import AIAssistant from './components/AIAssistant';
 import SaaSStats from './components/SaaSStats';
 
 import { supabase, isSupabaseConfigured, SUPABASE_SETUP_SQL } from './supabase';
@@ -1829,15 +1827,11 @@ export default function App() {
               <h2 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-none">
                 {activeTab === 'dashboard' && (language === 'ar' ? 'لوحة تنظيم المهام ⏱️' : 'Task Planner Hub ⏱️')}
                 {activeTab === 'pomodoro' && (language === 'ar' ? 'مساعد الفوكس والتركيز 🎯' : 'Attention Flow Engine 🎯')}
-                {activeTab === 'notes' && (language === 'ar' ? 'المفكرة الفكرية الذكية 🧠' : 'Cognitive Sandbox 🧠')}
-                {activeTab === 'ai_assistant' && (language === 'ar' ? 'استشاري الإنتاجية راضي AI 🧠' : 'AI Strategic Assistant 🧠')}
                 {activeTab === 'stats' && (language === 'ar' ? 'المقاييس البيانية والتقارير 📊' : 'Performance Diagnostics 📊')}
               </h2>
               <span className="text-[10px] text-[#64748B] mt-1 font-sans hidden sm:inline">
                 {activeTab === 'dashboard' && (language === 'ar' ? 'إدارة الخطط الزمنية وجداول الأعمال' : 'Configure milestones and timeline checkoffs')}
                 {activeTab === 'pomodoro' && (language === 'ar' ? 'جلسات تركيز عميقة خالية من المشتتات مع مولد الذبذبات الصوتيّة' : 'Stave off distractions and listen to clean auditory focus loop loops')}
-                {activeTab === 'notes' && (language === 'ar' ? 'مساحة منظمة لتلخيص الأفكار ومذكراتك الحرة بفرشاة الذكاء الاصطناعي' : 'Dynamic canvas with server-side AI context summarization')}
-                {activeTab === 'ai_assistant' && (language === 'ar' ? 'حلول جدولة وتخطيط فوري لمهامك بالاستعانة بخبراء Gemini' : 'Orchestrated timelines and scheduling analysis on demand')}
                 {activeTab === 'stats' && (language === 'ar' ? 'مراجعة نسب الالتزام والتوزيع الزمني لحجم إنجازك' : 'Interactive charting analysis')}
               </span>
             </div>
@@ -2122,26 +2116,28 @@ export default function App() {
 
                               {/* Task Items grid */}
                               <div className="grid grid-cols-1 gap-2.5">
-                                {dayTasks.map(task => (
-                                  <TaskItem
-                                    key={task.id}
-                                    task={task}
-                                    onToggle={handleToggleTask}
-                                    onDelete={handleDeleteTask}
-                                    onEdit={handleEditTrigger}
-                                    isOverdue={checkIsOverdue(task)}
-                                    language={language}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, task.id)}
-                                    onDragOver={(e) => handleDragOver(e, task)}
-                                    onDragEnter={(e) => handleDragEnter(e, task.id)}
-                                    onDragLeave={handleDragLeave}
-                                    onDragEnd={handleDragEnd}
-                                    onDrop={(e) => handleDrop(e, task.id)}
-                                    isDragging={draggedTaskId === task.id}
-                                    isDragOver={dragOverTaskId === task.id}
-                                  />
-                                ))}
+                                <AnimatePresence mode="popLayout">
+                                  {dayTasks.map(task => (
+                                    <TaskItem
+                                      key={task.id}
+                                      task={task}
+                                      onToggle={handleToggleTask}
+                                      onDelete={handleDeleteTask}
+                                      onEdit={handleEditTrigger}
+                                      isOverdue={checkIsOverdue(task)}
+                                      language={language}
+                                      draggable
+                                      onDragStart={(e) => handleDragStart(e, task.id)}
+                                      onDragOver={(e) => handleDragOver(e, task)}
+                                      onDragEnter={(e) => handleDragEnter(e, task.id)}
+                                      onDragLeave={handleDragLeave}
+                                      onDragEnd={handleDragEnd}
+                                      onDrop={(e) => handleDrop(e, task.id)}
+                                      isDragging={draggedTaskId === task.id}
+                                      isDragOver={dragOverTaskId === task.id}
+                                    />
+                                  ))}
+                                </AnimatePresence>
                               </div>
                             </div>
                           );
@@ -2216,16 +2212,6 @@ export default function App() {
               {/* TAB 3: POMODORO TIMER WORKSPACE */}
               {activeTab === 'pomodoro' && (
                 <PomodoroTimer language={language} />
-              )}
-
-              {/* TAB 4: SMART COGNITIVE NOTES */}
-              {activeTab === 'notes' && (
-                <SmartNotes userId={user.id} language={language} />
-              )}
-
-              {/* TAB 5: AI STRATEGIC COACH */}
-              {activeTab === 'ai_assistant' && (
-                <AIAssistant tasks={tasks} language={language} />
               )}
 
               {/* TAB 6: PERFORMANCE ANALYTICS */}
