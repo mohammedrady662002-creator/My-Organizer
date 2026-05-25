@@ -67,6 +67,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
   };
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const endTimeRef = useRef<number | null>(null);
   const totalSeconds = PRESETS[sessionType];
 
   useEffect(() => {
@@ -133,30 +134,82 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     }
   };
 
-  // Timer run loop
+  const latestStateRef = useRef({ sessionType, PRESETS, language });
+  useEffect(() => {
+    latestStateRef.current = { sessionType, PRESETS, language };
+  }, [sessionType, PRESETS, language]);
+
+  const handleComplete = () => {
+    const { sessionType: currentType, PRESETS: currentPresets, language: currentLang } = latestStateRef.current;
+    
+    triggerTone('complete');
+
+    // log session history
+    setFocusLogs(prevLogs => {
+      const newLog: FocusLog = {
+        id: 'log-' + Date.now(),
+        duration: Math.round(currentPresets[currentType] / 60),
+        type: currentType,
+        timestamp: new Date().toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      const updatedLogs = [newLog, ...prevLogs];
+      localStorage.setItem('focus_session_logs', JSON.stringify(updatedLogs));
+      return updatedLogs;
+    });
+
+    // Auto switch and continue
+    const nextType = currentType === 'work' ? 'break' : 'work';
+    const nextDurationSecs = currentPresets[nextType];
+    
+    setSessionType(nextType);
+    setSecondsLeft(nextDurationSecs);
+    endTimeRef.current = Date.now() + nextDurationSecs * 1000;
+  };
+
+  const handleCompleteRef = useRef(handleComplete);
+  useEffect(() => {
+    handleCompleteRef.current = handleComplete;
+  });
+
+  // Timer run loop with timestamp to survive background tab throttling
   useEffect(() => {
     if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            handleComplete();
-            return 0;
-          }
-          // Tick accent
-          if (prev % 60 === 0 || prev <= 5) {
-            triggerTone('tick');
-          }
-          return prev - 1;
+      // Only set if not already set, keeps continuity when switching away
+      if (!endTimeRef.current) {
+        setSecondsLeft((currentSeconds) => {
+          endTimeRef.current = Date.now() + currentSeconds * 1000;
+          return currentSeconds;
         });
-      }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
+      }
+      
+      timerRef.current = setInterval(() => {
+        if (!endTimeRef.current) return;
+        
+        const remaining = Math.round((endTimeRef.current - Date.now()) / 1000);
+        
+        if (remaining <= 0) {
+          handleCompleteRef.current!();
+        } else {
+          setSecondsLeft((prev) => {
+            if (prev !== remaining) {
+              if (remaining % 60 === 0 || remaining <= 5) {
+                triggerTone('tick');
+              }
+            }
+            return remaining;
+          });
+        }
+      }, 500); 
+    } else {
+      endTimeRef.current = null;
+      if (timerRef.current) clearInterval(timerRef.current);
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning, sessionType]);
+  }, [isRunning]);
 
   const handleStartPause = () => {
     if (!isRunning) {
@@ -167,29 +220,15 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
 
   const handleReset = () => {
     setIsRunning(false);
+    endTimeRef.current = null;
     setSecondsLeft(PRESETS[sessionType]);
   };
 
   const handleSwitchPreset = (type: 'work' | 'break') => {
     setIsRunning(false);
+    endTimeRef.current = null;
     setSessionType(type);
     setSecondsLeft(PRESETS[type]);
-  };
-
-  const handleComplete = () => {
-    setIsRunning(false);
-    triggerTone('complete');
-
-    // log session history
-    const newLog: FocusLog = {
-      id: 'log-' + Date.now(),
-      duration: Math.round(PRESETS[sessionType] / 60),
-      type: sessionType,
-      timestamp: new Date().toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })
-    };
-
-    saveLogs([newLog, ...focusLogs]);
-    setSecondsLeft(PRESETS[sessionType]);
   };
 
   const formatTime = (totalSec: number) => {
@@ -313,12 +352,12 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             {isRunning ? (
               <>
                 <Pause size={14} fill="currentColor" />
-                <span>{language === 'ar' ? 'إيقاف مؤقت' : 'Pause Focus'}</span>
+                <span>{language === 'ar' ? 'إيقاف مؤقت' : 'Pause'}</span>
               </>
             ) : (
               <>
                 <Play size={14} fill="currentColor" />
-                <span>{language === 'ar' ? 'بدء التركيز' : 'Start Focus'}</span>
+                <span>{language === 'ar' ? (sessionType === 'work' ? 'بدء التركيز' : 'بدء الاستراحة') : (sessionType === 'work' ? 'Start Focus' : 'Start Break')}</span>
               </>
             )}
           </button>

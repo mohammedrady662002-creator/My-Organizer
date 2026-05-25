@@ -1934,18 +1934,23 @@ export default function App() {
         {/* Active Tab Main Screen Scroll Area */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           
+          <div className={activeTab === 'pomodoro' ? 'block' : 'hidden'}>
+            <PomodoroTimer language={language} />
+          </div>
+
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
-              className="h-full"
-            >
+            {activeTab !== 'pomodoro' && (
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="h-full"
+              >
               
-              {/* TAB 1: CORE PLANNING DASHBOARD */}
-              {activeTab === 'dashboard' && (
+                {/* TAB 1: CORE PLANNING DASHBOARD */}
+                {activeTab === 'dashboard' && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                   
                   {/* Left task filters and items list */}
@@ -2209,17 +2214,13 @@ export default function App() {
                 </div>
               )}
 
-              {/* TAB 3: POMODORO TIMER WORKSPACE (always mounted to keep timer state) */}
-              <div className={activeTab === 'pomodoro' ? 'block' : 'hidden'}>
-                <PomodoroTimer language={language} />
-              </div>
-
               {/* TAB 6: PERFORMANCE ANALYTICS */}
               {activeTab === 'stats' && (
                 <SaaSStats tasks={tasks} language={language} />
               )}
 
-            </motion.div>
+              </motion.div>
+            )}
           </AnimatePresence>
 
         </div>
