@@ -48,15 +48,40 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     return 4;
   });
 
-  const [sessionType, setSessionType] = useState<'work' | 'break'>('work');
+  const [sessionType, setSessionType] = useState<'work' | 'break'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoro_type');
+      return (saved as 'work' | 'break') || 'work';
+    }
+    return 'work';
+  });
+  
   const [secondsLeft, setSecondsLeft] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pomodoro_work_duration');
-      return (saved ? parseInt(saved, 10) : 25) * 60;
+      const savedEnd = localStorage.getItem('pomodoro_end_time');
+      if (savedEnd) {
+        const end = parseInt(savedEnd, 10);
+        const rem = Math.round((end - Date.now()) / 1000);
+        if (rem > 0) return rem;
+      }
+      const saved = localStorage.getItem('pomodoro_seconds');
+      const base = saved ? parseInt(saved, 10) : (25 * 60);
+      return base;
     }
     return 25 * 60;
   });
-  const [isRunning, setIsRunning] = useState(false);
+
+  const [isRunning, setIsRunning] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedEnd = localStorage.getItem('pomodoro_end_time');
+      if (savedEnd) {
+        const end = parseInt(savedEnd, 10);
+        return end > Date.now();
+      }
+    }
+    return false;
+  });
+
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [focusLogs, setFocusLogs] = useState<FocusLog[]>([]);
 
@@ -68,7 +93,28 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const endTimeRef = useRef<number | null>(null);
+
+  // Initialize ref only once safely
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEnd = localStorage.getItem('pomodoro_end_time');
+      if (savedEnd) {
+        const end = parseInt(savedEnd, 10);
+        if (end > Date.now()) {
+          endTimeRef.current = end;
+        }
+      }
+    }
+  }, []);
   const totalSeconds = PRESETS[sessionType];
+
+  // Save current secondsLeft to localStorage whenever paused
+  useEffect(() => {
+    if (!isRunning) {
+      localStorage.setItem('pomodoro_seconds', secondsLeft.toString());
+      localStorage.setItem('pomodoro_type', sessionType);
+    }
+  }, [secondsLeft, isRunning, sessionType]);
 
   useEffect(() => {
     // Load local logs
@@ -143,6 +189,9 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     const { sessionType: currentType, PRESETS: currentPresets, language: currentLang } = latestStateRef.current;
     
     triggerTone('complete');
+    setIsRunning(false);
+    localStorage.removeItem('pomodoro_end_time');
+    endTimeRef.current = null;
 
     // log session history
     setFocusLogs(prevLogs => {
@@ -158,13 +207,11 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       return updatedLogs;
     });
 
-    // Auto switch and continue
     const nextType = currentType === 'work' ? 'break' : 'work';
     const nextDurationSecs = currentPresets[nextType];
     
     setSessionType(nextType);
     setSecondsLeft(nextDurationSecs);
-    endTimeRef.current = Date.now() + nextDurationSecs * 1000;
   };
 
   const handleCompleteRef = useRef(handleComplete);
@@ -178,7 +225,9 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       // Only set if not already set, keeps continuity when switching away
       if (!endTimeRef.current) {
         setSecondsLeft((currentSeconds) => {
-          endTimeRef.current = Date.now() + currentSeconds * 1000;
+          const end = Date.now() + currentSeconds * 1000;
+          endTimeRef.current = end;
+          localStorage.setItem('pomodoro_end_time', end.toString());
           return currentSeconds;
         });
       }
@@ -203,6 +252,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       }, 500); 
     } else {
       endTimeRef.current = null;
+      localStorage.removeItem('pomodoro_end_time');
       if (timerRef.current) clearInterval(timerRef.current);
     }
 
@@ -221,12 +271,14 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
   const handleReset = () => {
     setIsRunning(false);
     endTimeRef.current = null;
+    localStorage.removeItem('pomodoro_end_time');
     setSecondsLeft(PRESETS[sessionType]);
   };
 
   const handleSwitchPreset = (type: 'work' | 'break') => {
     setIsRunning(false);
     endTimeRef.current = null;
+    localStorage.removeItem('pomodoro_end_time');
     setSessionType(type);
     setSecondsLeft(PRESETS[type]);
   };
@@ -459,7 +511,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             <div>
               <span className="block text-[10px] font-medium text-slate-500 dark:text-[#94A3B8]">{language === 'ar' ? 'جلسات العمل' : 'Sessions Done'}</span>
               <span className="text-lg font-mono font-black text-emerald-500 dark:text-emerald-400">
-                {focusLogs.filter(l => l.type === 'work').length} <span className="text-sm text-slate-400 dark:text-slate-500">/ {targetSessions}</span>
+                {focusLogs.filter(l => l.type === 'work' && new Date(parseInt(l.id.replace('log-', '')) || Date.now()).toDateString() === new Date().toDateString()).length} <span className="text-sm text-slate-400 dark:text-slate-500">/ {targetSessions}</span>
               </span>
             </div>
           </div>

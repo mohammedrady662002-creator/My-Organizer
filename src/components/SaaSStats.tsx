@@ -43,18 +43,17 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
     return { total, completed, pending, rate, high, medium, low };
   }, [tasks]);
 
-  // 2. Data for weekly productivity chart (simulated day distribution based on tasks createdAt dates)
-  const weeklyDistributionData = useMemo(() => {
-    const dayNamesAr = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    const dayNamesEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // 2. Data for monthly productivity chart (monthly distribution)
+  const monthlyDistributionData = useMemo(() => {
+    const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    // Initialize days
-    const weekMap = Array.from({ length: 7 }, (_, idx) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - idx));
+    // Initialize 12 months for current year
+    const currentYear = new Date().getFullYear();
+    const monthMap = Array.from({ length: 12 }, (_, idx) => {
       return {
-        dayIndex: d.getDay(),
-        name: language === 'ar' ? dayNamesAr[d.getDay()] : dayNamesEn[d.getDay()],
+        monthIndex: idx,
+        name: language === 'ar' ? monthNamesAr[idx] : monthNamesEn[idx],
         done: 0,
         total: 0
       };
@@ -62,13 +61,9 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
 
     tasks.forEach(t => {
       const taskDate = new Date(t.createdAt || Date.now());
-      const diffTime = Math.abs(new Date().getTime() - taskDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      // If task was created in the last 7 days
-      if (diffDays <= 7) {
-        const tDay = taskDate.getDay();
-        const found = weekMap.find(item => item.dayIndex === tDay);
+      if (taskDate.getFullYear() === currentYear) {
+        const tMonth = taskDate.getMonth();
+        const found = monthMap.find(item => item.monthIndex === tMonth);
         if (found) {
           found.total += 1;
           if (t.completed) found.done += 1;
@@ -76,26 +71,15 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
       }
     });
 
-    // Fallback if no tasks created inside active week to make visual charts exciting out-of-the-box
-    const hasData = weekMap.some(item => item.total > 0);
-    if (!hasData && tasks.length > 0) {
-      // Seed some metrics relative to total
-      const seedRate = Math.max(1, Math.round(tasks.length / 3));
-      weekMap[2].total = seedRate;
-      weekMap[2].done = seedRate;
-      weekMap[4].total = seedRate + 1;
-      weekMap[4].done = tasks.filter(t => t.completed).length;
-      weekMap[6].total = Math.max(1, tasks.length - seedRate);
-      weekMap[6].done = Math.max(0, tasks.filter(t => t.completed).length - seedRate);
-    }
-
-    return weekMap;
+    return monthMap;
   }, [tasks, language]);
 
-  // 3. Category distribution data
+  // 3. Category distribution data (Achievements percentage)
   const categoryChartData = useMemo(() => {
-    const listMap: Record<string, { name: string; value: number }> = {};
+    const listMap: Record<string, { name: string; completed: number; total: number; percentage: number }> = {};
     
+    let totalCompletedOverall = 0;
+
     tasks.forEach(t => {
       const cat = t.category || 'personal';
       if (!listMap[cat]) {
@@ -105,19 +89,32 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
           else if (cat === 'work') label = 'المكتب والعمل';
           else if (cat === 'study') label = 'الدراسة والمقالات';
           else if (cat === 'health') label = 'صحي وبدني';
+          else if (cat === 'worship') label = 'روحاني وعبادات';
         }
-        listMap[cat] = { name: label, value: 0 };
+        listMap[cat] = { name: label, completed: 0, total: 0, percentage: 0 };
       }
-      listMap[cat].value += 1;
+      listMap[cat].total += 1;
+      if (t.completed) {
+        listMap[cat].completed += 1;
+        totalCompletedOverall += 1;
+      }
     });
 
-    const data = Object.values(listMap);
+    const data = Object.values(listMap).map(item => ({
+      name: item.name,
+      value: item.completed, // Use completed tasks as value to size pie slices relative to achievements
+      total: item.total,
+      percentage: totalCompletedOverall > 0 ? Math.round((item.completed / totalCompletedOverall) * 100) : 0,
+      completionRate: item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0
+    })).filter(item => item.total > 0);
+
     if (data.length === 0) {
       return [
-        { name: language === 'ar' ? 'عام' : 'General', value: 3 },
-        { name: language === 'ar' ? 'عمل' : 'Work', value: 2 },
+        { name: language === 'ar' ? 'عام' : 'General', value: 3, percentage: 60, completionRate: 60, total: 5 },
+        { name: language === 'ar' ? 'عمل' : 'Work', value: 2, percentage: 40, completionRate: 40, total: 5 },
       ];
     }
+    
     return data;
   }, [tasks, language]);
 
@@ -180,21 +177,21 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
       {/* Visual Analytics graphs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Weekly Productivity Area Chart */}
+        {/* Monthly Productivity Area Chart */}
         <div className="lg:col-span-8 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 font-sans">
                 <TrendingUp size={16} className="text-[#6366F1]" />
-                <span>{language === 'ar' ? 'منحنى الإنجاز والإنتاجية الأسبوعية' : 'Weekly Productivity Curve'}</span>
+                <span>{language === 'ar' ? 'منحنى الإنجاز والإنتاجية الشهري' : 'Monthly Productivity Curve'}</span>
               </h3>
-              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5 font-sans">{language === 'ar' ? 'مقارنة المهام المكتملة مقابل المهام المنشأة بالـ 7 أيام الأخيرة' : 'Completed tasks compared to overall created scope'}</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] mt-0.5 font-sans">{language === 'ar' ? 'مقارنة المهام المكتملة مقابل المهام المنشأة لكل شهر في السنة' : 'Completed tasks compared to overall created scope per month'}</p>
             </div>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-              <AreaChart data={weeklyDistributionData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <AreaChart data={monthlyDistributionData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDone" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.2}/>
@@ -219,14 +216,14 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
           </div>
         </div>
 
-        {/* Categories Distribution Pie Widget */}
+        {/* Categories Achievements Pie Widget */}
         <div className="lg:col-span-4 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div>
             <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 font-sans">
               <PieIcon size={16} className="text-purple-500 dark:text-purple-400" />
-              <span>{language === 'ar' ? 'توزيع المهام بحسب التصنيف' : 'Category Allocation'}</span>
+              <span>{language === 'ar' ? 'إنجازات الأقسام (بالنسبة)' : 'Section Achievements'}</span>
             </h3>
-            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] font-sans">{language === 'ar' ? 'النسب المئوية لحجم المهام في كل تصنيف' : 'Composition volume metric'}</p>
+            <p className="text-[10px] text-slate-400 dark:text-[#94A3B8] font-sans">{language === 'ar' ? 'نسب الإنجاز والمعدل لكل قسم' : 'Completion percentage per section'}</p>
           </div>
 
           <div className="h-44 w-full flex items-center justify-center relative my-4">
@@ -248,23 +245,30 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0F172A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}
                   itemStyle={{ fontSize: '11px', color: '#f8fafc' }}
+                  formatter={(value: any, name: any, props: any) => {
+                    return [`${props.payload.percentage}% (${value} ${language === 'ar' ? 'منجزة' : 'done'})`, name];
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
             
-            {/* Center indicator rate */}
-            <div className="absolute text-center flex flex-col select-none">
-              <span className="text-xs font-bold text-slate-800 dark:text-white font-sans">{language === 'ar' ? 'التصنيفات' : 'Categories'}</span>
-              <span className="text-[9px] text-slate-400 dark:text-[#64748B] font-mono font-bold">{categoryChartData.length} active</span>
+            {/* Center stat metric */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-xl font-black text-slate-800 dark:text-white font-mono">{stats.completed}</span>
+              <span className="text-[9px] text-[#64748B] font-bold uppercase">{language === 'ar' ? 'مهمة منجزة' : 'Done Total'}</span>
             </div>
           </div>
 
-          {/* Legend indicator names */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-2 border-t border-slate-100 dark:border-white/5">
-            {categoryChartData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-[#94A3B8] font-sans">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                <span>{entry.name} ({entry.value})</span>
+          <div className="grid grid-cols-2 gap-3 mt-1">
+            {categoryChartData.map((c, i) => (
+              <div key={i} className="flex flex-col border border-slate-100 dark:border-white/5 rounded-xl p-2.5 bg-slate-50 dark:bg-[#0F172A]">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                  <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold font-sans">{c.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono font-black text-slate-800 dark:text-white">
+                  <span>{c.percentage}% <span className="text-[9px] text-slate-400 font-normal">({c.value}/{c.total})</span></span>
+                </div>
               </div>
             ))}
           </div>
