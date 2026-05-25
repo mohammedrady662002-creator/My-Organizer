@@ -1,14 +1,18 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY;
+let supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL?.trim() || "";
+const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY?.trim() || "";
+
+if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+  supabaseUrl = `https://${supabaseUrl}`;
+}
 
 // Check if Supabase keys exist and are not set to default strings
 export const isSupabaseConfigured = 
   !!supabaseUrl && 
   !!supabaseAnonKey && 
-  supabaseUrl !== 'https://your-project-url.supabase.co' && 
-  supabaseAnonKey !== 'your-supabase-anon-key';
+  !supabaseUrl.includes('your-project-url') && 
+  !supabaseAnonKey.includes('your-supabase-anon-key');
 
 let client: SupabaseClient | null = null;
 if (isSupabaseConfigured) {
