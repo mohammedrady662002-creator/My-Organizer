@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -27,21 +27,32 @@ interface SaaSStatsProps {
 }
 
 export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
+  const currentMonthIdx = new Date().getMonth();
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonthIdx);
+
+  const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
-  // 1. Completion Rate Calculation
+  // 1. Completion Rate Calculation (Filtered by selected month)
   const stats = useMemo(() => {
-    const total = tasks.length;
-    const completed = tasks.filter(t => t.completed).length;
+    const currentYear = new Date().getFullYear();
+    const monthlyTasks = tasks.filter(t => {
+      const taskDate = new Date(t.createdAt || Date.now());
+      return taskDate.getMonth() === selectedMonth && taskDate.getFullYear() === currentYear;
+    });
+
+    const total = monthlyTasks.length;
+    const completed = monthlyTasks.filter(t => t.completed).length;
     const pending = total - completed;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
     
-    // Calculate priorities count
-    const high = tasks.filter(t => t.priority === 'high').length;
-    const medium = tasks.filter(t => t.priority === 'medium').length;
-    const low = tasks.filter(t => t.priority === 'low').length;
+    // Calculate priorities count based on monthly tasks
+    const high = monthlyTasks.filter(t => t.priority === 'high').length;
+    const medium = monthlyTasks.filter(t => t.priority === 'medium').length;
+    const low = monthlyTasks.filter(t => t.priority === 'low').length;
 
-    return { total, completed, pending, rate, high, medium, low };
-  }, [tasks]);
+    return { total, completed, pending, rate, high, medium, low, monthlyTasks };
+  }, [tasks, selectedMonth]);
 
   // 2. Data for monthly productivity chart (monthly distribution)
   const monthlyDistributionData = useMemo(() => {
@@ -80,7 +91,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
     
     let totalCompletedOverall = 0;
 
-    tasks.forEach(t => {
+    stats.monthlyTasks.forEach(t => {
       const cat = t.category || 'personal';
       if (!listMap[cat]) {
         let label = cat;
@@ -110,8 +121,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
 
     if (data.length === 0) {
       return [
-        { name: language === 'ar' ? 'عام' : 'General', value: 3, percentage: 60, completionRate: 60, total: 5 },
-        { name: language === 'ar' ? 'عمل' : 'Work', value: 2, percentage: 40, completionRate: 40, total: 5 },
+        { name: language === 'ar' ? 'لا توجد مهام' : 'No Tasks', value: 1, percentage: 0, completionRate: 0, total: 0 }
       ];
     }
     
@@ -124,6 +134,33 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
   return (
     <div className="space-y-6">
       
+      {/* Month Selection Header for Reports */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white font-sans flex items-center gap-2">
+            <PieIcon size={20} className="text-[#6366F1]" />
+            {language === 'ar' ? 'التقارير والإنجازات' : 'Performance Insights'}
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-[#94A3B8] mt-1 font-sans">
+            {language === 'ar' ? 'متابعة مهامك ونسب الأقسام شهرياً' : 'Monitor task completion and category ratios monthly'}
+          </p>
+        </div>
+        
+        <div>
+          <select 
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="bg-[#F1F5F9] dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-[#CBD5E1] text-xs font-bold rounded-xl px-3 py-2 outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors"
+          >
+            {monthNamesAr.map((mAr, idx) => (
+              <option key={idx} value={idx}>
+                {language === 'ar' ? mAr : monthNamesEn[idx]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Dynamic Statistics bento grid widgets */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -164,7 +201,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
             tag: language === 'ar' ? 'متوسط نسبة التقدم' : 'Efficiency score'
           }
         ].map((widget) => (
-          <div key={widget.id} className={`p-5 rounded-2xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none bg-gradient-to-br ${widget.bgClass}`}>
+          <div key={widget.id} className={`p-5 rounded-2xl bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none bg-gradient-to-br ${widget.bgClass}`}>
             <span className="block text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? widget.labelAr : widget.labelEn}</span>
             <span className={`text-2xl font-black block mt-2 font-mono ${widget.textClass}`}>
               {widget.val}
@@ -178,7 +215,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Monthly Productivity Area Chart */}
-        <div className="lg:col-span-8 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        <div className="lg:col-span-8 bg-[#F1F5F9] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 font-sans">
@@ -217,7 +254,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
         </div>
 
         {/* Categories Achievements Pie Widget */}
-        <div className="lg:col-span-4 bg-white dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        <div className="lg:col-span-4 bg-[#F1F5F9] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div>
             <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 font-sans">
               <PieIcon size={16} className="text-purple-500 dark:text-purple-400" />

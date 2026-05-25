@@ -10,8 +10,8 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc; /* Slate-50 feels clean and modern */
-  color: #1e293b; /* Slate-800 */
+  background-color: #E2E8F0; /* Slate-200 is softer */
+  color: #334155; /* Slate-700 */
   transition: background-color 0.25s ease-in-out, color 0.25s ease-in-out;
 }
 

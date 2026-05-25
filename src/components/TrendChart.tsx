@@ -77,7 +77,7 @@ export default function TrendChart({ tasks, language = 'ar' }: TrendChartProps) 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl shadow-lg text-xs space-y-1">
+        <div className="bg-[#F1F5F9] dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl shadow-lg text-xs space-y-1">
           <p className="font-bold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-800 pb-1 font-sans">{label}</p>
           {payload.map((item: any, idx: number) => {
             const isPercent = item.name.includes('%');
@@ -102,7 +102,7 @@ export default function TrendChart({ tasks, language = 'ar' }: TrendChartProps) 
   const hasAnyData = tasks.length > 0;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-4">
+    <div className="bg-[#F1F5F9] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-2">
           <ChartIcon size={18} className="text-emerald-500" />

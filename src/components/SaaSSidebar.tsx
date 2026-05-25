@@ -69,7 +69,7 @@ export default function SaaSSidebar({
         {!isCollapsed && (
           <button 
             onClick={() => setIsCollapsed(true)}
-            className="hidden md:flex p-1.5 rounded-lg border border-slate-200 dark:border-white/5 bg-white dark:bg-[#1E293B] text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-[#334155] cursor-pointer transition-colors"
+            className="hidden md:flex p-1.5 rounded-lg border border-slate-200 dark:border-white/5 bg-[#F1F5F9] dark:bg-[#1E293B] text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-[#334155] cursor-pointer transition-colors"
           >
             {language === 'ar' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </button>
@@ -79,7 +79,7 @@ export default function SaaSSidebar({
         {isOpenMobile && (
           <button 
             onClick={() => setIsOpenMobile(false)}
-            className="md:hidden p-1.5 rounded-lg bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-white cursor-pointer hover:bg-slate-100 dark:hover:bg-[#334155]"
+            className="md:hidden p-1.5 rounded-lg bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-white cursor-pointer hover:bg-slate-100 dark:hover:bg-[#334155]"
           >
             <X size={14} />
           </button>
@@ -91,7 +91,7 @@ export default function SaaSSidebar({
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 mx-4 mt-6 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#111827] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none relative overflow-hidden group shrink-0"
+          className="p-4 mx-4 mt-6 rounded-2xl bg-[#F1F5F9] dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#111827] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none relative overflow-hidden group shrink-0"
         >
           <div className="absolute -right-4 -bottom-4 w-12 h-12 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-150 transition-transform" />
           <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export default function SaaSSidebar({
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all relative cursor-pointer group ${
                 isActive 
                   ? 'text-indigo-600 dark:text-white' 
-                  : 'text-slate-600 dark:text-[#94A3B8] hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5'
+                  : 'text-slate-600 dark:text-[#94A3B8] hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#F1F5F9]/5'
               }`}
               title={isCollapsed ? (language === 'ar' ? item.nameAr : item.nameEn) : undefined}
             >
@@ -154,7 +154,7 @@ export default function SaaSSidebar({
         {isCollapsed ? (
           <button 
             onClick={() => setIsCollapsed(false)}
-            className="w-full h-10 rounded-xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/5 cursor-pointer text-slate-500 dark:text-white"
+            className="w-full h-10 rounded-xl flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#F1F5F9]/5 cursor-pointer text-slate-500 dark:text-white"
             title={language === 'ar' ? 'توسيع القائمة' : 'Expand Sidebar'}
           >
             {language === 'ar' ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
