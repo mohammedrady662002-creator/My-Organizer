@@ -308,7 +308,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       
       {/* Visual Timer Display Panel */}
-      <div className="lg:col-span-8 bg-[#F1F5F9] dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-8 flex flex-col items-center justify-center relative overflow-hidden rounded-3xl shadow-sm dark:shadow-none">
+      <div className="lg:col-span-8 bg-[#F5F5F4] dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-8 flex flex-col items-center justify-center relative overflow-hidden rounded-3xl shadow-sm dark:shadow-none">
         
         {/* Soft atmospheric gradient behind timer */}
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl transition-colors duration-500 -z-10 ${
@@ -326,8 +326,8 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
               onClick={() => handleSwitchPreset(opt.id as any)}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 sessionType === opt.id 
-                  ? 'bg-[#F1F5F9] dark:bg-[#1E293B] text-[#6366F1] dark:text-white border border-slate-200 dark:border-white/5 shadow-sm'
-                  : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#F1F5F9]/5'
+                  ? 'bg-[#F5F5F4] dark:bg-[#1E293B] text-[#6366F1] dark:text-white border border-slate-200 dark:border-white/5 shadow-sm'
+                  : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#F5F5F4]/5'
               }`}
             >
               {language === 'ar' ? opt.labelAr : opt.labelEn}
@@ -395,7 +395,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
             onClick={handleStartPause}
             className={`px-8 py-4 rounded-2xl font-bold text-xs flex items-center gap-2 transform active:scale-95 transition-all shadow-lg cursor-pointer ${
               isRunning
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-[#1E293B] dark:text-white border border-slate-200 dark:border-white/10 dark:hover:bg-[#F1F5F9]/5 shadow-sm'
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-[#1E293B] dark:text-white border border-slate-200 dark:border-white/10 dark:hover:bg-[#F5F5F4]/5 shadow-sm'
                 : sessionType === 'work'
                   ? 'bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white shadow-indigo-500/20'
                   : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/20'
@@ -418,7 +418,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
       </div>
 
       {/* Habits Focus statistics & Sessions history log */}
-      <div className="lg:col-span-4 bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
+      <div className="lg:col-span-4 bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
         
         <div className="space-y-6">
           {/* Custom Session Settings */}
@@ -445,7 +445,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
                       setSecondsLeft(val * 60);
                     }
                   }}
-                  className="w-full bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                  className="w-full bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
                 />
               </div>
               <div>
@@ -465,7 +465,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
                       setSecondsLeft(val * 60);
                     }
                   }}
-                  className="w-full bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                  className="w-full bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
                 />
               </div>
               <div>
@@ -482,7 +482,7 @@ export default function PomodoroTimer({ language }: PomodoroTimerProps) {
                     setTargetSessions(val);
                     localStorage.setItem('pomodoro_target_sessions', val.toString());
                   }}
-                  className="w-full bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
+                  className="w-full bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white font-mono focus:outline-none focus:border-[#6366F1] transition-all"
                 />
               </div>
             </div>

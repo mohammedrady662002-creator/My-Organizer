@@ -142,7 +142,7 @@ export default function TaskForm({ onSubmit, editingTask, onCancelEdit, defaultM
       initial={{ opacity: 0, scale: 0.98, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-      className="bg-[#F1F5F9] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
+      className="bg-[#F5F5F4] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-[16px] flex items-center gap-2">

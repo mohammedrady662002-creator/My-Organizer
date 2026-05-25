@@ -223,7 +223,7 @@ export default function TaskItem({
                 ? 'opacity-85 bg-slate-50/50 dark:bg-slate-950/40 border-dashed border-slate-200 dark:border-slate-800' 
                 : isOverdue
                   ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-250 dark:border-rose-900/40 ring-1 ring-rose-100 dark:ring-rose-950/20 shadow-sm shadow-rose-50/50 hover:border-rose-400'
-                  : 'border-slate-200/60 dark:border-slate-800 bg-[#F1F5F9] dark:bg-slate-900 hover:border-emerald-500/40'
+                  : 'border-slate-200/60 dark:border-slate-800 bg-[#F5F5F4] dark:bg-slate-900 hover:border-emerald-500/40'
         }`}
         id={`task-item-${task.id}`}
       >
@@ -260,8 +260,8 @@ export default function TaskItem({
               task.completed
                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20'
                 : isOverdue
-                  ? 'border-rose-300 dark:border-rose-700 hover:border-emerald-500 bg-[#F1F5F9] dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20'
-                  : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-[#F1F5F9] dark:bg-slate-900 hover:bg-emerald-50/30'
+                  ? 'border-rose-300 dark:border-rose-700 hover:border-emerald-500 bg-[#F5F5F4] dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20'
+                  : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500 bg-[#F5F5F4] dark:bg-slate-900 hover:bg-emerald-50/30'
             }`}
             id={`toggle-btn-${task.id}`}
           >

@@ -150,7 +150,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
           <select 
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="bg-[#F1F5F9] dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-[#CBD5E1] text-xs font-bold rounded-xl px-3 py-2 outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors"
+            className="bg-[#F5F5F4] dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-[#CBD5E1] text-xs font-bold rounded-xl px-3 py-2 outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1E293B] transition-colors"
           >
             {monthNamesAr.map((mAr, idx) => (
               <option key={idx} value={idx}>
@@ -201,7 +201,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
             tag: language === 'ar' ? 'متوسط نسبة التقدم' : 'Efficiency score'
           }
         ].map((widget) => (
-          <div key={widget.id} className={`p-5 rounded-2xl bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none bg-gradient-to-br ${widget.bgClass}`}>
+          <div key={widget.id} className={`p-5 rounded-2xl bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none bg-gradient-to-br ${widget.bgClass}`}>
             <span className="block text-[10px] font-bold text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? widget.labelAr : widget.labelEn}</span>
             <span className={`text-2xl font-black block mt-2 font-mono ${widget.textClass}`}>
               {widget.val}
@@ -215,7 +215,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Monthly Productivity Area Chart */}
-        <div className="lg:col-span-8 bg-[#F1F5F9] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        <div className="lg:col-span-8 bg-[#F5F5F4] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 font-sans">
@@ -254,7 +254,7 @@ export default function SaaSStats({ tasks, language }: SaaSStatsProps) {
         </div>
 
         {/* Categories Achievements Pie Widget */}
-        <div className="lg:col-span-4 bg-[#F1F5F9] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
+        <div className="lg:col-span-4 bg-[#F5F5F4] dark:bg-[#1E293B] rounded-3xl border border-slate-100 dark:border-white/5 p-6 flex flex-col justify-between shadow-sm dark:shadow-none">
           <div>
             <h3 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1 font-sans">
               <PieIcon size={16} className="text-purple-500 dark:text-purple-400" />

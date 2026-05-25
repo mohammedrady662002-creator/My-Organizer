@@ -213,7 +213,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
         {/* Welcome and stats panel */}
-        <div className="md:col-span-8 bg-[#F1F5F9] dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
+        <div className="md:col-span-8 bg-[#F5F5F4] dark:bg-[#1E293B]/60 border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
           <div>
             <div className="flex items-center gap-2 text-[#6366F1] font-bold text-xs uppercase tracking-wider mb-2">
               <Flame size={14} className="text-[#6366F1]" />
@@ -254,7 +254,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
         </div>
 
         {/* Add Habit Bento Card */}
-        <div className="md:col-span-4 bg-[#F1F5F9] dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
+        <div className="md:col-span-4 bg-[#F5F5F4] dark:bg-[#1E293B] border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-between rounded-3xl shadow-sm dark:shadow-none">
           <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
             <Plus size={16} className="text-[#6366F1]" />
             <span>{language === 'ar' ? 'عاطفة مخصصة جديدة' : 'Add Custom Habit'}</span>
@@ -287,7 +287,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
                     className={`px-3 py-2 text-[11px] rounded-xl font-bold border transition-colors cursor-pointer ${
                       newHabitCategory === cat.id
                         ? 'bg-indigo-500/10 border-[#6366F1] text-[#6366F1]'
-                        : 'bg-slate-50 border-slate-200 dark:bg-[#0F172A] dark:border-white/5 text-slate-500 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#F1F5F9]/5'
+                        : 'bg-slate-50 border-slate-200 dark:bg-[#0F172A] dark:border-white/5 text-slate-500 dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-[#F5F5F4]/5'
                     }`}
                   >
                     {language === 'ar' ? cat.labelAr : cat.labelEn}
@@ -308,7 +308,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       </div>
 
       {/* Habits List Panel */}
-      <div className="bg-[#F1F5F9] dark:bg-[#1E293B]/30 rounded-3xl border border-slate-200/60 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-none">
+      <div className="bg-[#F5F5F4] dark:bg-[#1E293B]/30 rounded-3xl border border-slate-200/60 dark:border-white/5 overflow-hidden shadow-sm dark:shadow-none">
         <div className="p-6 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-[#1E293B]/40">
           <div>
             <h2 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -334,7 +334,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-white/5">
             {habits.map((habit) => (
-              <div key={habit.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-[#F1F5F9]/5 transition-colors">
+              <div key={habit.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-[#F5F5F4]/5 transition-colors">
                 
                 {/* Habit details and streak */}
                 <div className="flex items-start gap-4 lg:w-1/3">
@@ -421,7 +421,7 @@ export default function HabitTracker({ userId, language }: HabitTrackerProps) {
       </div>
 
       {/* Motivational Advice Widget */}
-      <div className="p-6 rounded-3xl bg-[#F1F5F9] dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#111827] border border-slate-200/60 dark:border-white/5 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 shadow-sm dark:shadow-none">
+      <div className="p-6 rounded-3xl bg-[#F5F5F4] dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#111827] border border-slate-200/60 dark:border-white/5 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 shadow-sm dark:shadow-none">
         <div className="absolute right-0 top-0 w-32 h-32 bg-[#6366F1]/5 rounded-full blur-2xl" />
         <div className="absolute left-12 bottom-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl" />
         <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20">

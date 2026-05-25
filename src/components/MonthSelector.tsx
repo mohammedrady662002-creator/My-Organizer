@@ -39,7 +39,7 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-      className="bg-[#F1F5F9] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
+      className="bg-[#F5F5F4] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-[16px] flex items-center gap-2">
@@ -87,7 +87,7 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
                 <span className="font-bold text-sm truncate max-w-[70%]">{localizedMonthName.split(' ')[0]}</span>
                 {stats.total > 0 && (
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-sans ${
-                    isSelected ? 'bg-[#F1F5F9]/20 text-white' : 'bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'
+                    isSelected ? 'bg-[#F5F5F4]/20 text-white' : 'bg-slate-200/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'
                   }`}>
                     {stats.completed}/{stats.total}
                   </span>
@@ -103,12 +103,12 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
                     <span className="font-semibold font-sans">{stats.percentage}%</span>
                   </div>
                   {/* Progress Line */}
-                  <div className={`w-full h-1 rounded-full overflow-hidden ${isSelected ? 'bg-[#F1F5F9]/25' : 'bg-slate-200 dark:bg-slate-800'}`}>
+                  <div className={`w-full h-1 rounded-full overflow-hidden ${isSelected ? 'bg-[#F5F5F4]/25' : 'bg-slate-200 dark:bg-slate-800'}`}>
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${stats.percentage}%` }}
                       transition={{ duration: 0.5, ease: 'easeOut' }}
-                      className={`h-full rounded-full ${isSelected ? 'bg-[#F1F5F9]' : 'bg-emerald-500'}`}
+                      className={`h-full rounded-full ${isSelected ? 'bg-[#F5F5F4]' : 'bg-emerald-500'}`}
                     />
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export default function MonthSelector({ selectedMonth, onMonthChange, tasks, lan
 
               {/* Decorative accent for selected */}
               {isSelected && (
-                <span className="absolute -bottom-1 -left-1 w-8 h-8 bg-[#F1F5F9] opacity-10 rounded-full filter blur-sm group-hover:scale-125 transition-transform" />
+                <span className="absolute -bottom-1 -left-1 w-8 h-8 bg-[#F5F5F4] opacity-10 rounded-full filter blur-sm group-hover:scale-125 transition-transform" />
               )}
             </motion.button>
           );

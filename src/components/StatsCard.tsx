@@ -49,7 +49,7 @@ export default function StatsCard({ tasks, language = 'ar' }: StatsCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
       whileHover={{ y: -4, boxShadow: '0 20px 25px -5px rgb(16 185 129 / 0.05), 0 8px 10px -6px rgb(16 185 129 / 0.05)' }}
-      className="bg-[#F1F5F9] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm space-y-5 transition-all duration-300"
+      className="bg-[#F5F5F4] dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/80 p-5 shadow-sm space-y-5 transition-all duration-300"
     >
       <div className="flex items-center gap-2 pb-1">
         <TrendingUp size={18} className="text-emerald-500 animate-bounce" />

@@ -10,7 +10,7 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #E2E8F0; /* Slate-200 is softer */
+  background-color: #E7E5E4; /* Stone-200 is very soft and easy on eyes */
   color: #334155; /* Slate-700 */
   transition: background-color 0.25s ease-in-out, color 0.25s ease-in-out;
 }

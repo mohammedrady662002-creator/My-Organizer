@@ -175,7 +175,7 @@ function HeaderLiveClock({ language, label }: { language: 'ar' | 'en'; label: st
   }, []);
 
   return (
-    <div className="bg-slate-100/50 dark:bg-[#F1F5F9]/5 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]" id="live-header-clock">
+    <div className="bg-slate-100/50 dark:bg-[#F5F5F4]/5 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-white/10 p-3 flex flex-col items-center justify-center min-w-[130px]" id="live-header-clock">
       <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300 text-[11px] font-bold">
         <Clock size={12} />
         <span>{label}</span>
@@ -1389,7 +1389,7 @@ export default function App() {
   // Loading Screen
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#E2E8F0] flex flex-col items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="min-h-screen bg-[#E7E5E4] flex flex-col items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm font-bold text-slate-500 font-sans">
@@ -1405,7 +1405,7 @@ export default function App() {
     const t = TRANSLATIONS[language];
     return (
       <div 
-        className="min-h-screen bg-[#E2E8F0] dark:bg-slate-950 relative overflow-hidden flex flex-col justify-between transition-colors" 
+        className="min-h-screen bg-[#E7E5E4] dark:bg-slate-950 relative overflow-hidden flex flex-col justify-between transition-colors" 
         dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         <div className="absolute top-0 right-0 left-0 h-96 bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 z-0">
@@ -1424,7 +1424,7 @@ export default function App() {
             {/* Language Selection Toggle */}
             <button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="px-3 py-1.5 text-xs text-white bg-[#F1F5F9]/10 hover:bg-[#F1F5F9]/20 border border-white/10 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer font-sans font-bold"
+              className="px-3 py-1.5 text-xs text-white bg-[#F5F5F4]/10 hover:bg-[#F5F5F4]/20 border border-white/10 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer font-sans font-bold"
             >
               <Globe size={13} className="text-emerald-300" />
               <span>{language === 'ar' ? 'English' : 'العربية'}</span>
@@ -1440,7 +1440,7 @@ export default function App() {
         </header>
 
         <main className="relative z-10 max-w-md mx-auto w-full px-6 py-12 flex flex-col justify-center my-auto">
-          <div className="bg-[#F1F5F9] dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-8 shadow-2xl space-y-6 transition-all">
+          <div className="bg-[#F5F5F4] dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-8 shadow-2xl space-y-6 transition-all">
             <div className="text-center space-y-2">
               <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
                 <Database size={28} />
@@ -1522,13 +1522,13 @@ export default function App() {
                   <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button 
                       onClick={() => setAuthTab('email')}
-                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'email' ? 'bg-[#F1F5F9] dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'email' ? 'bg-[#F5F5F4] dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                     >
                       <div className="flex items-center justify-center gap-1.5"><Mail size={14} />{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</div>
                     </button>
                     <button 
                       onClick={() => setAuthTab('phone')}
-                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'phone' ? 'bg-[#F1F5F9] dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                      className={`flex-1 text-xs py-2 font-bold rounded-lg transition-all ${authTab === 'phone' ? 'bg-[#F5F5F4] dark:bg-slate-900 shadow-sm text-slate-800 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                     >
                       <div className="flex items-center justify-center gap-1.5"><Smartphone size={14} />{language === 'ar' ? 'رقم الهاتف' : 'Phone'}</div>
                     </button>
@@ -1715,7 +1715,7 @@ export default function App() {
                   <button 
                     onClick={() => handleSocialSignIn('google')}
                     disabled={authActionLoading}
-                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-[#F5F5F4] dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
                     <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -1728,7 +1728,7 @@ export default function App() {
                   <button 
                     onClick={() => handleSocialSignIn('facebook')}
                     disabled={authActionLoading}
-                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                    className="py-2.5 border border-slate-200 dark:border-slate-700 bg-[#F5F5F4] dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                   >
                     <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6c.86 0 1.9.15 1.9.15v2.1h-1.07c-1.05 0-1.33.65-1.33 1.28V12h2.36l-.38 3h-1.98v6.8C18.56 20.87 22 16.84 22 12z" />
@@ -1752,7 +1752,7 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen bg-[#E2E8F0] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 selection:bg-[#6366F1]/20 selection:text-indigo-200 font-sans flex overflow-hidden h-screen transition-colors duration-300" 
+      className="min-h-screen bg-[#E7E5E4] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 selection:bg-[#6366F1]/20 selection:text-indigo-200 font-sans flex overflow-hidden h-screen transition-colors duration-300" 
       dir={language === 'ar' ? 'rtl' : 'ltr'}
     >
       
@@ -1809,10 +1809,10 @@ export default function App() {
       </AnimatePresence>
 
       {/* 2. Main Content Screen Wrapper */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#E2E8F0] dark:bg-[#0B0F19] transition-colors duration-300">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#E7E5E4] dark:bg-[#0B0F19] transition-colors duration-300">
         
         {/* Top Professional Navbar */}
-        <header className="h-16 px-6 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between shrink-0 bg-[#F1F5F9]/80 dark:bg-[#0F172A]/40 backdrop-blur-md z-10 transition-colors duration-300">
+        <header className="h-16 px-6 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between shrink-0 bg-[#F5F5F4]/80 dark:bg-[#0F172A]/40 backdrop-blur-md z-10 transition-colors duration-300">
           <div className="flex items-center gap-3">
             {/* Mobile Hamburger menu toggle button */}
             <button
@@ -1921,7 +1921,7 @@ export default function App() {
                   </pre>
                   <button
                     onClick={handleCopySql}
-                    className="absolute left-2 top-2 px-2 py-1 bg-[#F1F5F9]/5 hover:bg-[#F1F5F9]/10 rounded border border-white/10 text-[9px] font-bold text-slate-300"
+                    className="absolute left-2 top-2 px-2 py-1 bg-[#F5F5F4]/5 hover:bg-[#F5F5F4]/10 rounded border border-white/10 text-[9px] font-bold text-slate-300"
                   >
                     {copiedSql ? (language === 'ar' ? 'مكتمل!' : 'Copied!') : (language === 'ar' ? 'نسخ' : 'Copy')}
                   </button>
@@ -1957,7 +1957,7 @@ export default function App() {
                   <div className="lg:col-span-8 space-y-6">
                     
                     {/* Add new task trigger form block */}
-                    <div className="bg-[#F1F5F9] dark:bg-[#1E293B]/30 border border-slate-200/60 dark:border-white/5 rounded-3xl p-5 flex flex-col gap-4 shadow-sm dark:shadow-none">
+                    <div className="bg-[#F5F5F4] dark:bg-[#1E293B]/30 border border-slate-200/60 dark:border-white/5 rounded-3xl p-5 flex flex-col gap-4 shadow-sm dark:shadow-none">
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-xs font-black text-slate-500 dark:text-[#94A3B8] uppercase tracking-wider">{language === 'ar' ? 'إدارة وتخطيط اليوم' : 'TASKS MANAGEMENT'}</h3>
@@ -2003,7 +2003,7 @@ export default function App() {
                     </div>
 
                     {/* Filters Dashboard Panel bar */}
-                    <div className="bg-[#F1F5F9] dark:bg-[#1E293B]/40 rounded-3xl border border-slate-200/60 dark:border-white/5 p-4 space-y-4 shadow-sm dark:shadow-none">
+                    <div className="bg-[#F5F5F4] dark:bg-[#1E293B]/40 rounded-3xl border border-slate-200/60 dark:border-white/5 p-4 space-y-4 shadow-sm dark:shadow-none">
                       
                       {/* View Mode Toggle */}
                       <div className="flex bg-slate-100 dark:bg-[#0F172A] p-1 rounded-xl border border-slate-200/50 dark:border-white/5 w-fit">
@@ -2026,7 +2026,7 @@ export default function App() {
                             }}
                             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                               viewMode === mode.id
-                                ? 'bg-[#F1F5F9] dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/50 dark:border-white/10'
+                                ? 'bg-[#F5F5F4] dark:bg-[#1E293B] text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/50 dark:border-white/10'
                                 : 'text-slate-500 dark:text-[#94A3B8] hover:text-slate-800 dark:hover:text-white'
                             }`}
                           >
@@ -2036,7 +2036,7 @@ export default function App() {
                       </div>
 
                       {/* Search box queries */}
-                      <div className="bg-[#F1F5F9] dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+                      <div className="bg-[#F5F5F4] dark:bg-[#0F172A] border border-slate-200/60 dark:border-white/5 rounded-xl px-3.5 py-2.5 flex items-center gap-3">
                         <Search size={14} className="text-[#475569] dark:text-[#94A3B8]" />
                         <input
                           type="text"
@@ -2076,10 +2076,10 @@ export default function App() {
                             onChange={(e) => setPriorityFilter(e.target.value as any)}
                             className="bg-slate-50 dark:bg-[#0F172A] text-[11px] text-slate-700 dark:text-[#94A3B8] font-bold border border-slate-200 dark:border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
                           >
-                            <option value="all" className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأولويات' : 'All Priority'}</option>
-                            <option value="high" className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'عالية الأهمية 🟥' : 'High Priority'}</option>
-                            <option value="medium" className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'متوسطة الأهمية 🟨' : 'Medium Priority'}</option>
-                            <option value="low" className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'منخفضة الأهمية 🟩' : 'Low Priority'}</option>
+                            <option value="all" className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأولويات' : 'All Priority'}</option>
+                            <option value="high" className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'عالية الأهمية 🟥' : 'High Priority'}</option>
+                            <option value="medium" className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'متوسطة الأهمية 🟨' : 'Medium Priority'}</option>
+                            <option value="low" className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'منخفضة الأهمية 🟩' : 'Low Priority'}</option>
                           </select>
 
                           <select
@@ -2087,9 +2087,9 @@ export default function App() {
                             onChange={(e) => setCategoryFilter(e.target.value)}
                             className="bg-slate-50 dark:bg-[#0F172A] text-[11px] text-slate-700 dark:text-[#94A3B8] font-bold border border-slate-200 dark:border-white/5 px-2.5 py-1.5 rounded-lg focus:outline-none cursor-pointer"
                           >
-                            <option value="all" className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</option>
+                            <option value="all" className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</option>
                             {CATEGORIES.map(c => (
-                              <option key={c.id} value={c.id} className="bg-[#F1F5F9] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? c.name : c.id}</option>
+                              <option key={c.id} value={c.id} className="bg-[#F5F5F4] dark:bg-slate-900 text-slate-800 dark:text-white">{language === 'ar' ? c.name : c.id}</option>
                             ))}
                           </select>
                         </div>
@@ -2195,7 +2195,7 @@ export default function App() {
                     <TrendChart tasks={tasks} />
 
                     {/* Export / Sync Options card */}
-                    <div className="p-5 rounded-3xl bg-[#F1F5F9] dark:bg-[#1E293B]/40 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-sm dark:shadow-none">
+                    <div className="p-5 rounded-3xl bg-[#F5F5F4] dark:bg-[#1E293B]/40 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-sm dark:shadow-none">
                       <div>
                         <h4 className="text-xs font-bold text-slate-800 dark:text-white">{language === 'ar' ? 'الاستيراد والتصدير والمزامنة' : 'Data Integrity & Feeds'}</h4>
                         <p className="text-[10px] text-slate-500 dark:text-[#64748B] mt-1 font-sans">{language === 'ar' ? 'قم بتصدير مهام حياتك لتقويمات Google أو Apple بنقرة واحدة.' : 'Consolidate plans and push outputs to Apple or Google feeds.'}</p>

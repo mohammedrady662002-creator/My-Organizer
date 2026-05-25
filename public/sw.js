@@ -1,4 +1,4 @@
-const CACHE_NAME = 'organizer-cache-v1';
+const CACHE_NAME = 'organizer-cache-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -16,10 +16,24 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Use Network First strategy
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        return response || fetch(event.request).catch(() => caches.match('/'));
+        // Cache the latest version if successful
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache if network fails
+        return caches.match(event.request).then(response => {
+          return response || caches.match('/');
+        });
       })
   );
 });
